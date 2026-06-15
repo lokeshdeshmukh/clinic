@@ -67,7 +67,7 @@ final class BuildInfo
             return [];
         }
 
-        $count = self::commitCount($gitDir);
+        $count = self::commitCount($basePath, $gitDir);
         $timestampSource = $refPath && is_file($refPath) ? $refPath : $headFile;
 
         return [
@@ -122,8 +122,13 @@ final class BuildInfo
         return '';
     }
 
-    private static function commitCount(string $gitDir): int
+    private static function commitCount(string $basePath, string $gitDir): int
     {
+        $countFromCommand = self::gitCommitCountFromCommand($basePath);
+        if ($countFromCommand !== null) {
+            return max(1, $countFromCommand);
+        }
+
         $logsHead = $gitDir . DIRECTORY_SEPARATOR . 'logs' . DIRECTORY_SEPARATOR . 'HEAD';
         if (!is_file($logsHead)) {
             return 1;
@@ -132,5 +137,48 @@ final class BuildInfo
         $lines = file($logsHead, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) ?: [];
 
         return max(1, count($lines));
+    }
+
+    private static function gitCommitCountFromCommand(string $basePath): ?int
+    {
+        $output = self::runGitCommand($basePath, 'rev-list --count HEAD');
+        if ($output === null || !preg_match('/^\d+$/', $output)) {
+            return null;
+        }
+
+        return (int) $output;
+    }
+
+    private static function runGitCommand(string $basePath, string $arguments): ?string
+    {
+        if (self::isFunctionDisabled('shell_exec')) {
+            return null;
+        }
+
+        $command = 'cd ' . escapeshellarg($basePath) . ' && git ' . $arguments . ' 2>/dev/null';
+        $result = shell_exec($command);
+        if (!is_string($result)) {
+            return null;
+        }
+
+        $result = trim($result);
+
+        return $result === '' ? null : $result;
+    }
+
+    private static function isFunctionDisabled(string $function): bool
+    {
+        if (!function_exists($function)) {
+            return true;
+        }
+
+        $disabled = (string) ini_get('disable_functions');
+        if ($disabled === '') {
+            return false;
+        }
+
+        $functions = array_map('trim', explode(',', $disabled));
+
+        return in_array($function, $functions, true);
     }
 }
