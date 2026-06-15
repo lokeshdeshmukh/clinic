@@ -1,0 +1,10 @@
+/vendor/
+/node_modules/
+/.env
+/storage/installed.lock
+/storage/logs/*.log
+/public/uploads/*
+!/public/uploads/.gitkeep
+/.idea/
+/.DS_Store
+/dist/

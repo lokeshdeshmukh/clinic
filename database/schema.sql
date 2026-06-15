@@ -1,0 +1,10 @@
+SOURCE database/migrations/001_create_clinics.sql;
+SOURCE database/migrations/002_create_doctors.sql;
+SOURCE database/migrations/003_create_doctor_availability.sql;
+SOURCE database/migrations/004_create_patients.sql;
+SOURCE database/migrations/005_create_appointments.sql;
+SOURCE database/migrations/006_create_appointment_status_logs.sql;
+SOURCE database/migrations/007_create_revenue_records.sql;
+SOURCE database/migrations/008_create_analytics_events.sql;
+SOURCE database/migrations/009_create_email_logs.sql;
+SOURCE database/migrations/010_create_system_settings.sql;

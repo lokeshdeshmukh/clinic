@@ -1,0 +1,23 @@
+CREATE TABLE IF NOT EXISTS doctor_availability (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    clinic_id BIGINT UNSIGNED NOT NULL,
+    doctor_id BIGINT UNSIGNED NOT NULL,
+    rule_type ENUM('weekly', 'date_override', 'holiday', 'blocked_slot') NOT NULL,
+    weekday TINYINT UNSIGNED NULL,
+    specific_date DATE NULL,
+    start_time TIME NULL,
+    end_time TIME NULL,
+    is_available TINYINT(1) NOT NULL DEFAULT 1,
+    slot_interval_minutes SMALLINT UNSIGNED NULL,
+    reason VARCHAR(255) NULL,
+    created_by_type ENUM('clinic', 'system') NOT NULL DEFAULT 'clinic',
+    created_by_id BIGINT UNSIGNED NULL,
+    created_at DATETIME NOT NULL,
+    updated_at DATETIME NOT NULL,
+    deleted_at DATETIME NULL,
+    CONSTRAINT fk_availability_clinic FOREIGN KEY (clinic_id) REFERENCES clinics(id),
+    CONSTRAINT fk_availability_doctor FOREIGN KEY (doctor_id) REFERENCES doctors(id),
+    INDEX idx_availability_doctor (doctor_id),
+    INDEX idx_availability_type_date (rule_type, specific_date),
+    INDEX idx_availability_weekday (doctor_id, weekday)
+);

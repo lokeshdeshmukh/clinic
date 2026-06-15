@@ -1,0 +1,17 @@
+RewriteEngine On
+
+# Block direct access to private application areas.
+RewriteRule ^(app|bootstrap|config|database|resources|routes|scripts|storage|vendor|node_modules)(/|$) - [F,L]
+RewriteRule ^(\.env|composer\.json|composer\.lock|package\.json|package-lock\.json|tailwind\.config\.js|README\.md|INSTALL\.md)$ - [F,L]
+
+# Allow root-level files and directories to resolve first.
+RewriteCond %{REQUEST_FILENAME} -f [OR]
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteRule ^ - [L]
+
+# Send installer and asset requests to the public directory.
+RewriteRule ^install/?(.*)$ public/install/$1 [L]
+RewriteRule ^assets/(.*)$ public/assets/$1 [L]
+
+# All application routes go through the root front controller.
+RewriteRule ^ index.php [L]

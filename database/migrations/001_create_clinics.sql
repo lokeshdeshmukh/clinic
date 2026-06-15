@@ -1,0 +1,21 @@
+CREATE TABLE IF NOT EXISTS clinics (
+    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(150) NOT NULL,
+    slug VARCHAR(180) NOT NULL UNIQUE,
+    address TEXT NOT NULL,
+    phone VARCHAR(30) NOT NULL,
+    email VARCHAR(190) NOT NULL UNIQUE,
+    password_hash VARCHAR(255) NOT NULL,
+    logo_path VARCHAR(255) NULL,
+    email_verified_at DATETIME NULL,
+    verification_token VARCHAR(100) NULL,
+    reset_token VARCHAR(100) NULL,
+    reset_token_expires_at DATETIME NULL,
+    status ENUM('pending_verification', 'active', 'suspended') NOT NULL DEFAULT 'pending_verification',
+    created_at DATETIME NOT NULL,
+    updated_at DATETIME NOT NULL,
+    deleted_at DATETIME NULL,
+    INDEX idx_clinics_status (status),
+    INDEX idx_clinics_verification_token (verification_token),
+    INDEX idx_clinics_reset_token (reset_token)
+);
