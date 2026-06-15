@@ -1,5 +1,7 @@
 <?php
 
+use App\Core\Auth;
+
 $quickDates = [];
 for ($offset = 0; $offset < 5; $offset++) {
     $timestamp = strtotime('+' . $offset . ' day');
@@ -12,141 +14,230 @@ for ($offset = 0; $offset < 5; $offset++) {
 
 $scopedClinic = current_clinic();
 $returnTarget = $redirectTo ?? '/doctors/' . $doctor['id'] . '/book';
-$loginHref = '/patient/login?redirect_to=' . urlencode((string) $returnTarget);
-$registerHref = '/patient/register?redirect_to=' . urlencode((string) $returnTarget);
-$backHref = $scopedClinic ? '/' : '/doctors/' . $doctor['id'];
+$googleClientId = trim((string) config('services.google.client_id', ''));
+$smsConfigured = trim((string) config('services.sms.gateway_url', '')) !== '';
+$patient = Auth::check('patient') ? Auth::user() : null;
+$patientDisplayName = $patient ? trim((string) (($patient['first_name'] ?? '') . ' ' . ($patient['last_name'] ?? ''))) : '';
 ?>
-<section class="booking-shell">
-    <div class="section-headline">
-        <div>
-            <p class="section-kicker"><?= e($doctor['clinic_name']) ?></p>
-            <h1>Book with <?= e($doctor['name']) ?></h1>
-            <p class="section-copy"><?= e($doctor['specialization']) ?> · INR <?= e(number_format((float) $doctor['consultation_fee'], 2)) ?> consultation fee.</p>
-        </div>
-        <a href="<?= e(url($backHref)) ?>" class="btn-secondary">Back</a>
-    </div>
-
-    <div class="booking-grid">
-        <aside class="booking-sidebar">
-            <div class="booking-doctor-card">
-                <div class="doctor-card__top">
-                    <div class="doctor-card__avatar">
-                        <?php if (!empty($doctor['profile_photo_path'])): ?>
-                            <img src="<?= e(url((string) $doctor['profile_photo_path'])) ?>" alt="<?= e($doctor['name']) ?>" class="doctor-card__avatar-image">
-                        <?php else: ?>
-                            <?= e(strtoupper(substr((string) $doctor['name'], 0, 1))) ?>
-                        <?php endif; ?>
-                    </div>
-                    <div class="doctor-card__identity">
-                        <h2><?= e($doctor['name']) ?></h2>
-                        <p><?= e($doctor['specialization']) ?></p>
-                    </div>
-                </div>
-
-                <div class="booking-summary-list">
-                    <div>
-                        <strong>Clinic</strong>
-                        <span><?= e($doctor['clinic_name']) ?></span>
-                    </div>
-                    <div>
-                        <strong>Address</strong>
-                        <span><?= e($doctor['clinic_address']) ?></span>
-                    </div>
-                    <div>
-                        <strong>Phone</strong>
-                        <span><?= e($doctor['clinic_phone']) ?></span>
-                    </div>
-                    <div>
-                        <strong>Slot duration</strong>
-                        <span><?= e((string) $doctor['slot_duration_minutes']) ?> minutes</span>
-                    </div>
-                </div>
-            </div>
-
-            <div class="booking-status-card">
-                <p class="booking-status-card__label">Booking status</p>
-                <?php if ($patientLoggedIn): ?>
-                    <h3>Ready to confirm</h3>
-                    <p>You are signed in, so once you choose a date and slot you can confirm immediately.</p>
+<section
+    class="booking-surface"
+    data-booking-experience
+    data-patient-logged-in="<?= $patientLoggedIn ? '1' : '0' ?>"
+    data-booking-redirect-to="<?= e((string) $returnTarget) ?>"
+>
+    <div class="booking-surface__hero">
+        <div class="booking-surface__identity">
+            <div class="doctor-card__avatar booking-surface__avatar">
+                <?php if (!empty($doctor['profile_photo_path'])): ?>
+                    <img src="<?= e(url((string) $doctor['profile_photo_path'])) ?>" alt="<?= e($doctor['name']) ?>" class="doctor-card__avatar-image">
                 <?php else: ?>
-                    <h3>Sign in before checkout</h3>
-                    <p>This clinic link stays on the same doctor after login, so patients can come from WhatsApp and continue booking.</p>
-                    <div class="booking-status-card__actions">
-                        <a href="<?= e(url($loginHref)) ?>" class="btn-primary">Login</a>
-                        <a href="<?= e(url($registerHref)) ?>" class="btn-secondary">Create account</a>
-                    </div>
+                    <?= e(strtoupper(substr((string) $doctor['name'], 0, 1))) ?>
                 <?php endif; ?>
             </div>
-        </aside>
-
-        <div class="booking-panel">
-            <div class="booking-panel__header">
-                <div>
-                    <p class="section-kicker">Step 1</p>
-                    <h2>Select date</h2>
-                </div>
-                <span class="section-badge">Live availability</span>
+            <div class="booking-surface__copy">
+                <p class="section-kicker"><?= e($scopedClinic['name'] ?? $doctor['clinic_name']) ?></p>
+                <h1><?= e($doctor['name']) ?></h1>
+                <p><?= e($doctor['specialization']) ?> · INR <?= e(number_format((float) $doctor['consultation_fee'], 2)) ?> consultation · <?= e((string) $doctor['slot_duration_minutes']) ?> min slots</p>
             </div>
-
-            <form method="post" action="<?= e(url('/doctors/' . $doctor['id'] . '/book')) ?>" class="booking-form">
-                <?= csrf_field() ?>
-                <input type="hidden" name="doctor_id" value="<?= e((string) $doctor['id']) ?>" data-slot-doctor>
-
-                <div class="quick-date-grid">
-                    <?php foreach ($quickDates as $index => $quickDate): ?>
-                        <button
-                            type="button"
-                            class="quick-date-pill<?= $index === 0 ? ' is-active' : '' ?>"
-                            data-quick-date="<?= e($quickDate['value']) ?>"
-                        >
-                            <span><?= e($quickDate['weekday']) ?></span>
-                            <strong><?= e($quickDate['day']) ?></strong>
-                        </button>
-                    <?php endforeach; ?>
-                </div>
-
-                <div class="booking-form__field">
-                    <label for="appointment_date">Choose another date</label>
-                    <input
-                        id="appointment_date"
-                        type="date"
-                        name="appointment_date"
-                        min="<?= e(date('Y-m-d')) ?>"
-                        value="<?= e($quickDates[0]['value']) ?>"
-                        data-slot-date
-                        required
-                    >
-                </div>
-
-                <div class="booking-panel__header">
-                    <div>
-                        <p class="section-kicker">Step 2</p>
-                        <h2>Select time</h2>
-                    </div>
-                    <span class="section-badge section-badge--soft" data-selected-slot-label>Select a slot</span>
-                </div>
-
-                <div data-slot-results class="slot-grid"></div>
-                <input type="hidden" name="start_time" data-slot-input required>
-
-                <div class="booking-form__field">
-                    <label for="notes">Notes for the clinic</label>
-                    <textarea id="notes" name="notes" rows="4" placeholder="Optional message, symptoms, or arrival note"></textarea>
-                </div>
-
-                <div class="booking-sticky-bar">
-                    <div class="booking-sticky-bar__summary">
-                        <span data-selected-date-label><?= e(date('D, d M', strtotime($quickDates[0]['value']))) ?></span>
-                        <strong data-selected-time-label>Select time</strong>
-                    </div>
-
-                    <?php if ($patientLoggedIn): ?>
-                        <button class="btn-primary booking-sticky-bar__button" type="submit">Confirm appointment</button>
-                    <?php else: ?>
-                        <a href="<?= e(url($loginHref)) ?>" class="btn-primary booking-sticky-bar__button">Login to confirm</a>
-                    <?php endif; ?>
-                </div>
-            </form>
+        </div>
+        <div class="booking-surface__helper">
+            <span class="section-badge">Pick a slot first</span>
+            <p>Tap any available time. Login opens only after you choose a slot, and then you return straight back to the same booking state.</p>
         </div>
     </div>
+
+    <form method="post" action="<?= e(url('/doctors/' . $doctor['id'] . '/book')) ?>" class="booking-surface__form" data-booking-form>
+        <?= csrf_field() ?>
+        <input type="hidden" name="doctor_id" value="<?= e((string) $doctor['id']) ?>" data-slot-doctor>
+        <input type="hidden" name="start_time" data-slot-input required>
+
+        <div class="booking-surface__panel">
+            <div class="booking-surface__section-head">
+                <div>
+                    <p class="section-kicker">Select date</p>
+                    <h2>Choose a day</h2>
+                </div>
+                <span class="section-badge section-badge--soft" data-selected-date-label><?= e(date('D, d M', strtotime($quickDates[0]['value']))) ?></span>
+            </div>
+
+            <div class="quick-date-grid booking-surface__dates">
+                <?php foreach ($quickDates as $index => $quickDate): ?>
+                    <button
+                        type="button"
+                        class="quick-date-pill<?= $index === 0 ? ' is-active' : '' ?>"
+                        data-quick-date="<?= e($quickDate['value']) ?>"
+                    >
+                        <span><?= e($quickDate['weekday']) ?></span>
+                        <strong><?= e($quickDate['day']) ?></strong>
+                    </button>
+                <?php endforeach; ?>
+            </div>
+
+            <div class="booking-surface__calendar-input">
+                <label for="appointment_date">Or choose another date</label>
+                <input
+                    id="appointment_date"
+                    type="date"
+                    name="appointment_date"
+                    min="<?= e(date('Y-m-d')) ?>"
+                    value="<?= e($quickDates[0]['value']) ?>"
+                    data-slot-date
+                    required
+                >
+            </div>
+        </div>
+
+        <div class="booking-surface__panel">
+            <div class="booking-surface__section-head">
+                <div>
+                    <p class="section-kicker">Select time</p>
+                    <h2>Available slots</h2>
+                </div>
+                <span class="section-badge" data-selected-slot-label>Tap a slot</span>
+            </div>
+
+            <div data-slot-results class="slot-grid slot-grid--booking"></div>
+        </div>
+
+        <div class="booking-surface__panel booking-surface__panel--soft">
+            <div class="booking-surface__section-head">
+                <div>
+                    <p class="section-kicker">Optional</p>
+                    <h2>Notes for clinic</h2>
+                </div>
+                <?php if ($patientLoggedIn && $patientDisplayName !== ''): ?>
+                    <span class="section-badge section-badge--soft">Signed in as <?= e($patientDisplayName) ?></span>
+                <?php else: ?>
+                    <span class="section-badge section-badge--soft">Login after slot selection</span>
+                <?php endif; ?>
+            </div>
+
+            <textarea id="notes" name="notes" rows="4" class="booking-surface__notes" placeholder="Symptoms, reason for visit, or anything the clinic should know"></textarea>
+        </div>
+
+        <div class="booking-sticky-bar booking-sticky-bar--sheet">
+            <div class="booking-sticky-bar__summary">
+                <span data-selected-date-label-secondary><?= e(date('D, d M', strtotime($quickDates[0]['value']))) ?></span>
+                <strong data-selected-time-label>Select time</strong>
+            </div>
+            <button
+                class="btn-primary booking-sticky-bar__button"
+                type="<?= $patientLoggedIn ? 'submit' : 'button' ?>"
+                data-booking-submit
+            ><?= $patientLoggedIn ? 'Confirm appointment' : 'Continue to login' ?></button>
+        </div>
+    </form>
+
+    <?php if (!$patientLoggedIn): ?>
+        <div class="booking-auth-modal" data-auth-modal hidden>
+            <div class="booking-auth-modal__backdrop" data-auth-close></div>
+            <div class="booking-auth-modal__dialog" role="dialog" aria-modal="true" aria-labelledby="booking-login-title">
+                <button type="button" class="booking-auth-modal__close" data-auth-close aria-label="Close login popup">×</button>
+                <div class="booking-auth-modal__head">
+                    <p class="section-kicker">Complete booking</p>
+                    <h3 id="booking-login-title">Login to reserve this slot</h3>
+                    <p data-auth-slot-copy>Select a slot first, then sign in here without leaving the page.</p>
+                </div>
+
+                <div class="auth-method-tabs booking-auth-modal__tabs">
+                    <button type="button" class="auth-method-tab is-active" data-auth-tab="email">Email OTP</button>
+                    <button type="button" class="auth-method-tab" data-auth-tab="mobile">Mobile OTP</button>
+                    <?php if ($googleClientId !== ''): ?>
+                        <button type="button" class="auth-method-tab" data-auth-tab="google">Google</button>
+                    <?php endif; ?>
+                </div>
+
+                <div class="booking-auth-modal__message" data-auth-message hidden></div>
+
+                <div class="booking-auth-modal__panel is-active" data-auth-panel="email">
+                    <form class="auth-form" data-auth-send-form data-auth-channel="email">
+                        <?= csrf_field() ?>
+                        <input type="hidden" name="redirect_to" value="<?= e((string) $returnTarget) ?>">
+                        <div>
+                            <label for="booking_email">Email</label>
+                            <input id="booking_email" type="email" name="email" placeholder="Enter your email" required>
+                        </div>
+                        <div>
+                            <label for="booking_name_email">Full name</label>
+                            <input id="booking_name_email" name="full_name" value="<?= e($patientDisplayName) ?>" placeholder="Helpful for first-time login">
+                        </div>
+                        <div>
+                            <label for="booking_phone_email">Mobile (optional)</label>
+                            <input id="booking_phone_email" name="phone" placeholder="Optional, for faster mobile login later">
+                        </div>
+                        <button class="btn-primary w-full" type="submit">Send email OTP</button>
+                    </form>
+                </div>
+
+                <div class="booking-auth-modal__panel" data-auth-panel="mobile">
+                    <form class="auth-form" data-auth-send-form data-auth-channel="mobile">
+                        <?= csrf_field() ?>
+                        <input type="hidden" name="redirect_to" value="<?= e((string) $returnTarget) ?>">
+                        <div>
+                            <label for="booking_phone">Mobile number</label>
+                            <input id="booking_phone" name="phone" placeholder="Enter your mobile number" required>
+                        </div>
+                        <div>
+                            <label for="booking_name_mobile">Full name</label>
+                            <input id="booking_name_mobile" name="full_name" value="<?= e($patientDisplayName) ?>" placeholder="Helpful for first-time login">
+                        </div>
+                        <div>
+                            <label for="booking_email_mobile">Email (optional)</label>
+                            <input id="booking_email_mobile" type="email" name="email" placeholder="Needed if you want email confirmations">
+                        </div>
+                        <?php if (!$smsConfigured): ?>
+                            <p class="auth-inline-note">SMS OTP will start working once your SMS gateway is configured. Until then, use email OTP or Google.</p>
+                        <?php endif; ?>
+                        <button class="btn-primary w-full" type="submit"<?= !$smsConfigured ? ' disabled' : '' ?>>Send mobile OTP</button>
+                    </form>
+                </div>
+
+                <?php if ($googleClientId !== ''): ?>
+                    <div class="booking-auth-modal__panel" data-auth-panel="google">
+                        <div class="auth-google auth-google--modal">
+                            <p class="auth-google__label">Use your Google account to continue instantly.</p>
+                            <form method="post" action="<?= e(url('/patient/login/google')) ?>" data-google-login-form data-google-ajax="true">
+                                <?= csrf_field() ?>
+                                <input type="hidden" name="redirect_to" value="<?= e((string) $returnTarget) ?>">
+                                <input type="hidden" name="credential" value="" data-google-credential>
+                            </form>
+                            <script src="https://accounts.google.com/gsi/client" async defer></script>
+                            <div
+                                id="g_id_onload_booking"
+                                data-client_id="<?= e($googleClientId) ?>"
+                                data-context="signin"
+                                data-ux_mode="popup"
+                                data-callback="handleGooglePatientSignIn"
+                                data-auto_prompt="false"
+                            ></div>
+                            <div
+                                class="g_id_signin"
+                                data-type="standard"
+                                data-shape="pill"
+                                data-theme="outline"
+                                data-text="continue_with"
+                                data-size="large"
+                                data-logo_alignment="left"
+                            ></div>
+                        </div>
+                    </div>
+                <?php endif; ?>
+
+                <div class="booking-auth-modal__panel" data-auth-panel="verify">
+                    <form class="auth-form" data-auth-verify-form>
+                        <?= csrf_field() ?>
+                        <input type="hidden" name="redirect_to" value="<?= e((string) $returnTarget) ?>">
+                        <input type="hidden" name="challenge_token" value="" data-auth-challenge-token>
+                        <input type="hidden" name="channel" value="" data-auth-channel-input>
+                        <div>
+                            <label for="booking_otp">Enter OTP</label>
+                            <input id="booking_otp" name="otp" inputmode="numeric" autocomplete="one-time-code" placeholder="Enter OTP" required>
+                        </div>
+                        <p class="auth-inline-note" data-auth-verify-copy>We’ll send the OTP after you submit your details.</p>
+                        <button class="btn-primary w-full" type="submit">Verify and continue</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    <?php endif; ?>
 </section>

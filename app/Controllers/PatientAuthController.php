@@ -107,7 +107,22 @@ final class PatientAuthController extends Controller
         try {
             $challenge = $this->access->sendLoginOtp($mode, array_merge($data, ['redirect_to' => $redirectTo]), current_clinic());
         } catch (\Throwable $exception) {
+            if ($request->isJson()) {
+                $this->json([
+                    'ok' => false,
+                    'message' => $exception->getMessage(),
+                ], 422);
+            }
+
             $this->redirect($this->withLoginState('/patient/login', $mode, $redirectTo), $exception->getMessage(), 'error');
+        }
+
+        if ($request->isJson()) {
+            $this->json([
+                'ok' => true,
+                'message' => 'OTP sent successfully.',
+                'challenge' => $challenge,
+            ]);
         }
 
         $query = $this->withLoginState('/patient/login', (string) $challenge['channel'], $redirectTo);
@@ -123,6 +138,13 @@ final class PatientAuthController extends Controller
         $mode = (string) $request->input('channel', 'email');
 
         if ($challengeToken === '' || $otp === '') {
+            if ($request->isJson()) {
+                $this->json([
+                    'ok' => false,
+                    'message' => 'Enter the OTP to continue.',
+                ], 422);
+            }
+
             $base = $this->withLoginState('/patient/login', $mode, $redirectTo);
             $separator = str_contains($base, '?') ? '&' : '?';
             $this->redirect($base . $separator . 'challenge=' . urlencode($challengeToken), 'Enter the OTP to continue.', 'error');
@@ -132,9 +154,29 @@ final class PatientAuthController extends Controller
             $patient = $this->access->verifyLoginOtp($challengeToken, $otp);
             Auth::login('patient', (int) $patient['id']);
         } catch (\Throwable $exception) {
+            if ($request->isJson()) {
+                $this->json([
+                    'ok' => false,
+                    'message' => $exception->getMessage(),
+                ], 422);
+            }
+
             $base = $this->withLoginState('/patient/login', $mode, $redirectTo);
             $separator = str_contains($base, '?') ? '&' : '?';
             $this->redirect($base . $separator . 'challenge=' . urlencode($challengeToken), $exception->getMessage(), 'error');
+        }
+
+        if ($request->isJson()) {
+            $this->json([
+                'ok' => true,
+                'message' => 'You are signed in.',
+                'patient' => [
+                    'id' => $patient['id'],
+                    'name' => trim(($patient['first_name'] ?? '') . ' ' . ($patient['last_name'] ?? '')),
+                    'email' => $patient['email'] ?? null,
+                    'phone' => $patient['phone'] ?? null,
+                ],
+            ]);
         }
 
         $this->redirect($redirectTo !== '' ? $redirectTo : '/patient/dashboard', 'You are signed in.');
@@ -146,6 +188,13 @@ final class PatientAuthController extends Controller
         $credential = trim((string) $request->input('credential'));
 
         if ($credential === '') {
+            if ($request->isJson()) {
+                $this->json([
+                    'ok' => false,
+                    'message' => 'Google sign-in response was empty. Please try again.',
+                ], 422);
+            }
+
             $this->redirect($this->withLoginState('/patient/login', 'email', $redirectTo), 'Google sign-in response was empty. Please try again.', 'error');
         }
 
@@ -153,7 +202,27 @@ final class PatientAuthController extends Controller
             $patient = $this->access->loginWithGoogle($credential);
             Auth::login('patient', (int) $patient['id']);
         } catch (\Throwable $exception) {
+            if ($request->isJson()) {
+                $this->json([
+                    'ok' => false,
+                    'message' => $exception->getMessage(),
+                ], 422);
+            }
+
             $this->redirect($this->withLoginState('/patient/login', 'email', $redirectTo), $exception->getMessage(), 'error');
+        }
+
+        if ($request->isJson()) {
+            $this->json([
+                'ok' => true,
+                'message' => 'Signed in with Google successfully.',
+                'patient' => [
+                    'id' => $patient['id'],
+                    'name' => trim(($patient['first_name'] ?? '') . ' ' . ($patient['last_name'] ?? '')),
+                    'email' => $patient['email'] ?? null,
+                    'phone' => $patient['phone'] ?? null,
+                ],
+            ]);
         }
 
         $this->redirect($redirectTo !== '' ? $redirectTo : '/patient/dashboard', 'Signed in with Google successfully.');
