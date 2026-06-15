@@ -49,11 +49,13 @@ If your host points the subdomain to the extracted folder root, that is fine. Th
 
 The installer will:
 
-- Create the `.env` file
+- Create the environment file
 - Save your app URL, database, and SMTP settings
 - Run all SQL migrations
 - Run the seed data
 - Create `storage/installed.lock`
+
+When possible, the installer writes configuration to an external `.clinicflow.env` file one level above the deployed app folder so Git-based redeploys do not overwrite it.
 
 After that, open:
 
@@ -65,18 +67,20 @@ That is where the first clinic admin account is created.
 
 The installer needs permission to write:
 
-- `.env`
+- the selected env file location
 - `storage/logs`
 - `storage/installed.lock`
 - `public/uploads`
 
 On most shared hosting accounts this works automatically after ZIP extraction. If it does not, create these manually from File Manager:
 
-- an empty `.env` file in the project root
+- an empty `.clinicflow.env` file one level above the app folder, or an empty `.env` file in the app root
 - the folder `storage/logs`
 - the folder `public/uploads`
 
 Then run the installer again.
+
+If you plan to use Hostinger Git deployment, prefer the external `.clinicflow.env` file one level above the app folder. A repo-root `.env` inside the deployed folder is more likely to be replaced during updates.
 
 ## 6. Cron job for reminders
 
@@ -144,11 +148,10 @@ But it is no longer required for standard deployment.
 
 ## 12. Automatic future updates with Git
 
-If you do not want to upload a ZIP every time, use the GitHub deployment flow in [AUTO_DEPLOY.md](AUTO_DEPLOY.md).
+If you do not want to upload a ZIP every time, use the Hostinger Git deployment flow in [AUTO_DEPLOY.md](AUTO_DEPLOY.md).
 
 That flow:
 
-- keeps `.env` on the server
+- keeps the live env file outside the deployed repository
 - does not ask for DB or SMTP settings again
-- uploads code automatically on every push to `main`
-- runs new SQL migrations automatically after deployment
+- pulls code from GitHub through Hostinger Git deployment

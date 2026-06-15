@@ -1,0 +1,33 @@
+name: Repository Checks
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+
+      - name: Ensure env files are not tracked
+        run: |
+          for path in .env .clinicflow.env storage/app.env; do
+            if git ls-files --error-unmatch "$path" >/dev/null 2>&1; then
+              echo "$path is tracked in Git. Remove it from the repository."
+              exit 1
+            fi
+          done
+
+      - name: PHP syntax check
+        run: |
+          find app bootstrap config public routes scripts -name "*.php" -print0 | xargs -0 -n1 php -l

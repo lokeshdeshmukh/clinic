@@ -2,20 +2,7 @@
 
 declare(strict_types=1);
 
-$buildMetaPath = base_path('storage/app_version.json');
-$buildMeta = [
-    'version' => '0.0.0.1',
-    'commit' => 'manual',
-    'deployed_at' => null,
-    'source' => 'zip-upload',
-];
-
-if (is_file($buildMetaPath)) {
-    $decoded = json_decode((string) file_get_contents($buildMetaPath), true);
-    if (is_array($decoded)) {
-        $buildMeta = array_merge($buildMeta, $decoded);
-    }
-}
+$buildMeta = \App\Core\BuildInfo::resolve(base_path());
 
 return [
     'name' => env('APP_NAME', 'ClinicFlow'),

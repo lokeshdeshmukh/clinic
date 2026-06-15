@@ -1,6 +1,8 @@
 /vendor/
 /node_modules/
 /.env
+/.clinicflow.env
+/storage/app.env
 /storage/installed.lock
 /storage/logs/*.log
 /public/uploads/*

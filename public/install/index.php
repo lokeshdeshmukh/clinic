@@ -3,8 +3,17 @@
 declare(strict_types=1);
 
 $basePath = dirname(__DIR__, 2);
-$envPath = $basePath . '/.env';
-$lockPath = $basePath . '/storage/installed.lock';
+require_once $basePath . '/app/Core/Env.php';
+require_once $basePath . '/app/Core/InstallState.php';
+
+$resolvedEnvPath = \App\Core\Env::resolvePath($basePath);
+$preferredExternalEnvPath = dirname($basePath) . '/.clinicflow.env';
+$envPath = is_file($resolvedEnvPath)
+    ? $resolvedEnvPath
+    : ((is_dir(dirname($preferredExternalEnvPath)) && is_writable(dirname($preferredExternalEnvPath)))
+        ? $preferredExternalEnvPath
+        : $basePath . '/.env');
+$lockPath = \App\Core\InstallState::lockPath($basePath);
 $templatePath = $basePath . '/.env.example';
 $requestUriPath = parse_url($_SERVER['REQUEST_URI'] ?? '/install/', PHP_URL_PATH) ?: '/install/';
 $appBase = preg_replace('#/(?:install(?:/index\.php)?)$#', '', rtrim($requestUriPath, '/')) ?: '';
@@ -14,8 +23,16 @@ $errors = [];
 $success = null;
 $deployTokenValue = '';
 $deployHookUrl = '';
+$detectedInstalled = false;
 
-if (is_file($lockPath)) {
+if (!is_file($lockPath)) {
+    $detectedInstalled = \App\Core\InstallState::isInstalled($basePath);
+    if ($detectedInstalled) {
+        \App\Core\InstallState::ensureLockFile($basePath);
+    }
+}
+
+if (is_file($lockPath) || $detectedInstalled) {
     $success = 'ClinicFlow is already installed. Delete storage/installed.lock only if you intentionally want to reinstall.';
 }
 
@@ -52,8 +69,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $success === null) {
         $errors[] = 'App URL must be a valid URL.';
     }
 
-    if (!is_writable($basePath) && !is_file($envPath)) {
-        $errors[] = 'The project root is not writable, so the installer cannot create .env.';
+    if (!is_writable(dirname($envPath)) && !is_file($envPath)) {
+        $errors[] = 'The installer cannot write the environment file. Make the target directory writable and try again.';
     }
 
     if (!is_dir($basePath . '/storage/logs') && !mkdir($basePath . '/storage/logs', 0775, true) && !is_dir($basePath . '/storage/logs')) {
@@ -113,7 +130,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $success === null) {
             }, $envTemplate);
 
             if ($envContent === null || file_put_contents($envPath, $envContent) === false) {
-                throw new RuntimeException('Unable to write the .env file.');
+                throw new RuntimeException('Unable to write the environment file.');
             }
 
             require_once $basePath . '/bootstrap/app.php';
@@ -198,7 +215,7 @@ function installerOld(string $key, string $default = ''): string
             </div>
         <?php endif; ?>
 
-        <p class="note">Recommended flow: create a new subdomain, upload the ZIP into that subdomain folder, extract it, then open <strong>/install/</strong> on the subdomain.</p>
+        <p class="note">Recommended flow: create a new subdomain, upload the ZIP into that subdomain folder, extract it, then open <strong>/install/</strong> on the subdomain. When possible, the installer will save your live configuration in an external <strong>.clinicflow.env</strong> file one level above the deployed app so Hostinger Git deploy will not overwrite it.</p>
 
         <form method="post" class="grid" action="">
             <div class="grid cols-2">

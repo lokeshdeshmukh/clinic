@@ -34,7 +34,7 @@ if (is_file(BASE_PATH . '/vendor/autoload.php')) {
     require BASE_PATH . '/vendor/autoload.php';
 }
 
-\App\Core\Env::load(BASE_PATH . '/.env');
+\App\Core\Env::load(\App\Core\Env::resolvePath(BASE_PATH));
 \App\Core\Config::bootstrap(BASE_PATH . '/config');
 \App\Core\Session::start((string) config('app.session_name', 'clinicflow_session'));
 

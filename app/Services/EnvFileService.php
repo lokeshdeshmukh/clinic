@@ -10,7 +10,7 @@ final class EnvFileService
 {
     public function set(array $values): void
     {
-        $path = base_path('.env');
+        $path = \App\Core\Env::resolvePath(base_path());
         $content = is_file($path) ? file_get_contents($path) : file_get_contents(base_path('.env.example'));
 
         if ($content === false || $content === '') {

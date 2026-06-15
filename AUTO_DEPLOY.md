@@ -1,91 +1,62 @@
-# Auto Deploy With GitHub
+# Hostinger Git Deploy
 
-This project supports automatic shared-hosting deployment without server terminal access.
+This project now fits a Hostinger Git deployment flow better than an FTP push workflow.
 
-## How it works
+## Recommended setup
 
-1. Your code lives in GitHub.
-2. Every push to `main` triggers GitHub Actions.
-3. GitHub uploads changed files to your hosting account over FTP.
-4. GitHub calls a secure deploy hook on your site.
-5. The site runs only new SQL migrations automatically.
+1. Keep the code in GitHub
+2. Connect the repository in Hostinger `Advanced -> Git`
+3. Deploy the `main` branch to your live app folder
+4. Keep live secrets outside the deployed repository
 
-Your database, SMTP settings, app URL, and session settings stay safe because they remain inside the server-side `.env` file and are not overwritten by deployment.
+## Protecting the live env file
 
-## One-time setup
+This app supports an external server-only environment file.
 
-### 1. Put this project in GitHub
+It looks for env files in this order:
 
-Create a GitHub repository and push this project to it.
+1. `APP_ENV_FILE` server variable if you ever define one
+2. `$HOME/.clinicflow.env`
+3. `$HOME/.env`
+4. one level above the app folder as `.clinicflow.env`
+5. one level above the app folder as `.env`
+6. `storage/app.env`
+7. the repo root `.env`
 
-### 2. Install the site first
+For Hostinger Git deploy, the safest option is:
 
-Upload once by ZIP and complete:
+- create `.clinicflow.env` one level above the deployed app folder
+- keep `.env` out of GitHub
 
-```text
-https://your-subdomain.com/install/
-```
+Example idea:
 
-The installer creates `.env` and shows you a deploy token and a ready deploy hook URL.
+- deployed app folder: `public_html/appointment`
+- live env file: `public_html/.clinicflow.env`
 
-If the site is already installed, you can also find or rotate the deploy token inside:
+This matters because Hostinger Git deploy can replace files inside the deployed app directory during updates. Keeping the live env file one level above that directory avoids accidental overwrites.
 
-`Admin Dashboard -> Settings`
+## If the site is already installed
 
-### 3. Add GitHub secrets
+1. Open Hostinger File Manager
+2. Copy the current repo-root `.env` contents
+3. Create a new file one level above the app folder named `.clinicflow.env`
+4. Paste the env contents there
+5. Delete the repo-root `.env` from the server if you want the external file to be the only source
 
-In your GitHub repository:
+The application will automatically prefer the external `.clinicflow.env` file.
 
-`Settings` -> `Secrets and variables` -> `Actions`
+## Important Git rule
 
-Add:
+`.env`, `.clinicflow.env`, and `storage/app.env` must never be committed to GitHub.
 
-- `FTP_SERVER`
-- `FTP_USERNAME`
-- `FTP_PASSWORD`
-- `FTP_REMOTE_DIR`
-- `DEPLOY_HOOK_URL`
+This repository now includes a GitHub Actions check that fails if any supported env file is tracked.
 
-### 4. Secret values
+## Future database changes
 
-- `FTP_SERVER`
-  Example: `ftp.yourdomain.com`
-
-- `FTP_USERNAME`
-  Your hosting FTP username
-
-- `FTP_PASSWORD`
-  Your hosting FTP password
-
-- `FTP_REMOTE_DIR`
-  The subdomain folder on the server
-  Example: `/public_html/clinic/`
-
-- `DEPLOY_HOOK_URL`
-  Example:
-
-```text
-https://clinic.yourdomain.com/deploy/run-updates?token=YOUR_DEPLOY_TOKEN
-```
-
-Use the exact URL shown by the installer.
-
-## What happens on future updates
-
-When you change code and push to `main`:
-
-- the site files update automatically
-- `.env` stays untouched
-- `public/uploads` stays untouched
-- `storage/logs` stays untouched
-- new database migrations run automatically
-
-## Important rule for future schema changes
-
-When you need a database change:
+When you need a schema change:
 
 1. Add a new SQL file in `database/migrations`
-2. Give it the next number, for example:
+2. Use the next number, for example:
 
 ```text
 011_add_indexes_to_appointments.sql
@@ -93,10 +64,4 @@ When you need a database change:
 
 3. Commit and push
 
-The deploy hook applies only migrations that have not already been recorded.
-
-## If your host supports Git directly
-
-Some cPanel hosts include `Git Version Control`.
-
-That can work too, but it often still needs a manual pull or custom hook. The included GitHub Actions workflow is usually the easiest auto-update path on shared hosting without terminal access.
+Then apply the updates on the server through your deployment flow and the migration service.
