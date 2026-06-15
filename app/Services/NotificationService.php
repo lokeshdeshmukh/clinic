@@ -34,12 +34,37 @@ final class NotificationService
 
     public function sendPatientWelcome(array $patient): void
     {
+        if (empty($patient['email'])) {
+            return;
+        }
+
         $this->mailer->send(
             $patient['email'],
             'Welcome to ' . config('app.name'),
             'patient-welcome',
             ['patient' => $patient],
             ['patient_id' => $patient['id']]
+        );
+    }
+
+    public function sendPatientLoginOtp(string $email, string $otp, ?array $clinic = null): bool
+    {
+        $subject = $clinic
+            ? 'Your login code for ' . $clinic['name']
+            : 'Your login code for ' . config('app.name');
+
+        return $this->mailer->send(
+            $email,
+            $subject,
+            'patient-login-otp',
+            [
+                'otp' => $otp,
+                'clinic' => $clinic,
+                'ttlMinutes' => (int) config('services.otp.ttl_minutes', 10),
+            ],
+            [
+                'clinic_id' => $clinic['id'] ?? null,
+            ]
         );
     }
 
@@ -56,6 +81,10 @@ final class NotificationService
 
     public function sendAppointmentConfirmation(array $appointment): void
     {
+        if (empty($appointment['patient_email'])) {
+            return;
+        }
+
         $this->mailer->send(
             $appointment['patient_email'],
             'Appointment confirmed with ' . $appointment['doctor_name'],
@@ -67,6 +96,10 @@ final class NotificationService
 
     public function sendAppointmentCancellation(array $appointment): void
     {
+        if (empty($appointment['patient_email'])) {
+            return;
+        }
+
         $this->mailer->send(
             $appointment['patient_email'],
             'Appointment cancelled',
@@ -78,6 +111,10 @@ final class NotificationService
 
     public function sendAppointmentReschedule(array $appointment, string $oldDate, string $oldTime): void
     {
+        if (empty($appointment['patient_email'])) {
+            return;
+        }
+
         $this->mailer->send(
             $appointment['patient_email'],
             'Appointment rescheduled',
@@ -89,6 +126,10 @@ final class NotificationService
 
     public function sendAppointmentReminder(array $appointment): void
     {
+        if (empty($appointment['patient_email'])) {
+            return;
+        }
+
         $this->mailer->send(
             $appointment['patient_email'],
             'Appointment reminder',

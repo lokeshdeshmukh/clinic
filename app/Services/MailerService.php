@@ -13,6 +13,10 @@ final class MailerService
 {
     public function send(string $to, string $subject, string $template, array $data = [], array $context = []): bool
     {
+        if (trim($to) === '') {
+            return false;
+        }
+
         $body = View::render('emails/' . $template, $data, null);
         $logModel = new EmailLog();
         $logId = $logModel->insert([

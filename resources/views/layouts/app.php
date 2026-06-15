@@ -7,6 +7,14 @@ $currentUser = Auth::user();
 $guard = Auth::guard();
 $flashSuccess = Session::getFlash('success');
 $flashError = Session::getFlash('error');
+$scopedClinic = current_clinic();
+$isScoped = $scopedClinic !== null;
+$phoneHref = $isScoped && !empty($scopedClinic['phone'])
+    ? 'tel:' . preg_replace('/[^0-9+]/', '', (string) $scopedClinic['phone'])
+    : null;
+$brandInitial = $isScoped
+    ? strtoupper(substr((string) $scopedClinic['name'], 0, 1))
+    : 'H';
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -14,67 +22,137 @@ $flashError = Session::getFlash('error');
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= e($title ?? config('app.name')) ?></title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Sora:wght@500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="<?= e(asset('css/app.css')) ?>">
+    <link rel="stylesheet" href="<?= e(asset('css/experience.css')) ?>">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.css">
     <script defer src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/chart.js@4.4.6/dist/chart.umd.min.js"></script>
     <script defer src="<?= e(asset('js/app.js')) ?>"></script>
 </head>
-<body class="min-h-screen bg-slate-50 text-slate-900" data-base-url="<?= e(rtrim((string) config('app.url'), '/')) ?>">
-    <div class="relative overflow-hidden bg-slate-950 text-white">
-        <div class="absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(37,99,235,0.35),_transparent_35%),radial-gradient(circle_at_bottom_right,_rgba(8,145,178,0.25),_transparent_30%)]"></div>
-        <header class="relative mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
-            <a href="<?= e(url('/')) ?>" class="flex items-center gap-3">
-                <span class="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-white/10 text-lg font-bold">CF</span>
-                <span>
-                    <span class="block text-sm uppercase tracking-[0.32em] text-slate-300">Clinic</span>
-                    <span class="block text-lg font-semibold"><?= e(config('app.name')) ?></span>
+<body class="site-body<?= $isScoped ? ' is-clinic-scoped' : '' ?>" data-base-url="<?= e(url('')) ?>">
+    <div class="site-backdrop"></div>
+    <header class="site-header-shell">
+        <div class="site-header">
+            <a href="<?= e(url('/')) ?>" class="site-brand">
+                <span class="site-brand__mark">
+                    <?php if ($isScoped && !empty($scopedClinic['logo_path'])): ?>
+                        <img src="<?= e(url((string) $scopedClinic['logo_path'])) ?>" alt="<?= e($scopedClinic['name']) ?>" class="site-brand__logo">
+                    <?php else: ?>
+                        <?= e($brandInitial) ?>
+                    <?php endif; ?>
+                </span>
+                <span class="site-brand__copy">
+                    <span class="site-brand__eyebrow"><?= $isScoped ? 'Clinic booking desk' : 'Huviena clinics' ?></span>
+                    <span class="site-brand__name"><?= e($isScoped ? (string) $scopedClinic['name'] : (string) config('app.name')) ?></span>
                 </span>
             </a>
-            <nav class="flex flex-wrap items-center gap-3 text-sm">
-                <a class="rounded-full px-4 py-2 text-slate-200 transition hover:bg-white/10" href="<?= e(url('/clinics')) ?>">Clinics</a>
-                <?php if ($guard === 'clinic'): ?>
-                    <a class="rounded-full px-4 py-2 text-slate-200 transition hover:bg-white/10" href="<?= e(url('/admin/dashboard')) ?>">Dashboard</a>
-                    <form method="post" action="<?= e(url('/clinic/logout')) ?>" class="inline">
-                        <?= csrf_field() ?>
-                        <button class="rounded-full bg-white px-4 py-2 font-medium text-slate-900 transition hover:bg-slate-100">Logout</button>
-                    </form>
-                <?php elseif ($guard === 'patient'): ?>
-                    <a class="rounded-full px-4 py-2 text-slate-200 transition hover:bg-white/10" href="<?= e(url('/patient/dashboard')) ?>">My Appointments</a>
-                    <form method="post" action="<?= e(url('/patient/logout')) ?>" class="inline">
-                        <?= csrf_field() ?>
-                        <button class="rounded-full bg-white px-4 py-2 font-medium text-slate-900 transition hover:bg-slate-100">Logout</button>
-                    </form>
+
+            <nav class="site-nav">
+                <?php if ($isScoped): ?>
+                    <?php if ($guard === 'clinic'): ?>
+                        <a class="site-nav__link" href="<?= e(url('/admin/dashboard')) ?>">Dashboard</a>
+                        <form method="post" action="<?= e(url('/clinic/logout')) ?>" class="inline">
+                            <?= csrf_field() ?>
+                            <button class="site-nav__button" type="submit">Logout</button>
+                        </form>
+                    <?php elseif ($guard === 'super_admin'): ?>
+                        <a class="site-nav__link" href="<?= e(url('/super-admin/dashboard')) ?>">Platform dashboard</a>
+                        <form method="post" action="<?= e(url('/super-admin/logout')) ?>" class="inline">
+                            <?= csrf_field() ?>
+                            <button class="site-nav__button" type="submit">Logout</button>
+                        </form>
+                    <?php elseif ($guard === 'patient'): ?>
+                        <a class="site-nav__link" href="<?= e(url('/patient/dashboard')) ?>">My bookings</a>
+                        <form method="post" action="<?= e(url('/patient/logout')) ?>" class="inline">
+                            <?= csrf_field() ?>
+                            <button class="site-nav__button" type="submit">Logout</button>
+                        </form>
+                    <?php else: ?>
+                        <?php if ($phoneHref): ?>
+                            <a class="site-nav__link" href="<?= e($phoneHref) ?>">Call clinic</a>
+                        <?php endif; ?>
+                        <a class="site-nav__button" href="<?= e(url('/patient/login')) ?>">Patient login</a>
+                    <?php endif; ?>
                 <?php else: ?>
-                    <a class="rounded-full px-4 py-2 text-slate-200 transition hover:bg-white/10" href="<?= e(url('/patient/login')) ?>">Patient Login</a>
-                    <a class="rounded-full bg-white px-4 py-2 font-medium text-slate-900 transition hover:bg-slate-100" href="<?= e(url('/clinic/login')) ?>">Clinic Admin</a>
+                    <a class="site-nav__link" href="<?= e(url('/clinics')) ?>">Clinics</a>
+                    <?php if ($guard === 'clinic'): ?>
+                        <a class="site-nav__link" href="<?= e(url('/admin/dashboard')) ?>">Dashboard</a>
+                        <form method="post" action="<?= e(url('/clinic/logout')) ?>" class="inline">
+                            <?= csrf_field() ?>
+                            <button class="site-nav__button" type="submit">Logout</button>
+                        </form>
+                    <?php elseif ($guard === 'super_admin'): ?>
+                        <a class="site-nav__link" href="<?= e(url('/super-admin/dashboard')) ?>">Platform dashboard</a>
+                        <form method="post" action="<?= e(url('/super-admin/logout')) ?>" class="inline">
+                            <?= csrf_field() ?>
+                            <button class="site-nav__button" type="submit">Logout</button>
+                        </form>
+                    <?php elseif ($guard === 'patient'): ?>
+                        <a class="site-nav__link" href="<?= e(url('/patient/dashboard')) ?>">My bookings</a>
+                        <form method="post" action="<?= e(url('/patient/logout')) ?>" class="inline">
+                            <?= csrf_field() ?>
+                            <button class="site-nav__button" type="submit">Logout</button>
+                        </form>
+                    <?php else: ?>
+                        <a class="site-nav__link" href="<?= e(url('/patient/login')) ?>">Patient login</a>
+                        <a class="site-nav__button" href="<?= e(url('/clinic/login')) ?>">Clinic admin</a>
+                    <?php endif; ?>
                 <?php endif; ?>
             </nav>
-        </header>
-        <?php if ($currentUser): ?>
-            <div class="relative mx-auto max-w-7xl px-4 pb-5 text-sm text-slate-300 sm:px-6 lg:px-8">
-                Signed in as <?= e($currentUser['email']) ?>
+        </div>
+
+        <?php if ($isScoped): ?>
+            <div class="site-subheader">
+                <div>
+                    <p class="site-subheader__title"><?= e($scopedClinic['address']) ?></p>
+                    <p class="site-subheader__meta"><?= e($scopedClinic['phone']) ?><?php if (!empty($scopedClinic['email'])): ?> · <?= e($scopedClinic['email']) ?><?php endif; ?></p>
+                </div>
+                <div class="site-subheader__badges">
+                    <span class="site-pill">Build <?= e(config('app.build.version')) ?></span>
+                    <span class="site-pill site-pill--soft">Mobile booking ready</span>
+                </div>
+            </div>
+        <?php elseif ($currentUser): ?>
+            <div class="site-subheader site-subheader--compact">
+                <p class="site-subheader__meta">Signed in as <?= e($currentUser['email']) ?></p>
+                <span class="site-pill">Build <?= e(config('app.build.version')) ?></span>
             </div>
         <?php endif; ?>
-    </div>
+    </header>
 
-    <main class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+    <main class="site-main">
         <?php if ($flashSuccess): ?>
-            <div class="mb-4 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900"><?= e($flashSuccess) ?></div>
+            <div class="notice notice--success"><?= e($flashSuccess) ?></div>
         <?php endif; ?>
         <?php if ($flashError): ?>
-            <div class="mb-4 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-900"><?= e($flashError) ?></div>
+            <div class="notice notice--error"><?= e($flashError) ?></div>
         <?php endif; ?>
+
         <?= $content ?>
     </main>
-    <footer class="border-t border-slate-200 bg-white/70">
-        <div class="mx-auto flex max-w-7xl flex-col gap-2 px-4 py-4 text-xs text-slate-500 sm:px-6 lg:flex-row lg:items-center lg:justify-between lg:px-8">
-            <p><?= e(config('app.name')) ?> build <?= e(config('app.build.version')) ?></p>
+
+    <footer class="site-footer">
+        <div class="site-footer__inner">
             <p>
-                commit <?= e(config('app.build.commit')) ?>
+                <?= e($isScoped ? (string) $scopedClinic['name'] : (string) config('app.name')) ?>
+                · build <?= e(config('app.build.version')) ?>
+                <?php if ((string) config('app.build.commit') !== ''): ?>
+                    · commit <?= e(config('app.build.commit')) ?>
+                <?php endif; ?>
+            </p>
+            <p>
                 <?php if ((string) config('app.build.deployed_at') !== ''): ?>
-                    <span class="mx-1">|</span>
                     deployed <?= e((string) config('app.build.deployed_at')) ?>
+                <?php else: ?>
+                    mobile-first clinic booking by Huviena
+                <?php endif; ?>
+                <?php if ($isScoped): ?>
+                    · <a href="<?= e(url('/clinic/login')) ?>">admin login</a>
+                <?php else: ?>
+                    · <a href="<?= e(url('/super-admin/login')) ?>">platform admin</a>
                 <?php endif; ?>
             </p>
         </div>

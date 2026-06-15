@@ -10,7 +10,12 @@ final class Middleware
     {
         if ($name === 'guest') {
             if (Auth::check()) {
-                Response::redirect(Auth::guard() === 'clinic' ? '/admin/dashboard' : '/patient/dashboard');
+                $redirect = match (Auth::guard()) {
+                    'clinic' => '/admin/dashboard',
+                    'super_admin' => '/super-admin/dashboard',
+                    default => '/patient/dashboard',
+                };
+                Response::redirect($redirect);
             }
 
             return;
@@ -29,6 +34,15 @@ final class Middleware
             if (!Auth::check('patient')) {
                 Session::flash('error', 'Please sign in as a patient to continue.');
                 Response::redirect('/patient/login');
+            }
+
+            return;
+        }
+
+        if ($name === 'auth:super_admin') {
+            if (!Auth::check('super_admin')) {
+                Session::flash('error', 'Please sign in as a platform admin to continue.');
+                Response::redirect('/super-admin/login');
             }
 
             return;

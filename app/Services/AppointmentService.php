@@ -98,8 +98,11 @@ final class AppointmentService
         }
 
         $appointment = $this->appointments->findDetailed($appointmentId);
+        $confirmationSent = !empty($appointment['patient_email']);
         $this->notifications->sendAppointmentConfirmation($appointment);
-        $this->appointments->updateById($appointmentId, ['confirmation_sent_at' => date('Y-m-d H:i:s')]);
+        if ($confirmationSent) {
+            $this->appointments->updateById($appointmentId, ['confirmation_sent_at' => date('Y-m-d H:i:s')]);
+        }
 
         return $appointment;
     }

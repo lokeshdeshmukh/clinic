@@ -67,6 +67,25 @@ final class Appointment extends Model
         return $statement->fetchAll();
     }
 
+    public function listForPatientInClinic(int $patientId, int $clinicId): array
+    {
+        $sql = 'SELECT a.*, d.name AS doctor_name, d.specialization, c.name AS clinic_name, c.phone AS clinic_phone
+                FROM appointments a
+                INNER JOIN doctors d ON d.id = a.doctor_id
+                INNER JOIN clinics c ON c.id = a.clinic_id
+                WHERE a.patient_id = :patient_id
+                  AND a.clinic_id = :clinic_id
+                  AND a.deleted_at IS NULL
+                ORDER BY a.appointment_date DESC, a.start_time DESC';
+        $statement = $this->db->prepare($sql);
+        $statement->execute([
+            'patient_id' => $patientId,
+            'clinic_id' => $clinicId,
+        ]);
+
+        return $statement->fetchAll();
+    }
+
     public function findForPatient(int $id, int $patientId): ?array
     {
         $statement = $this->db->prepare('SELECT * FROM appointments WHERE id = :id AND patient_id = :patient_id AND deleted_at IS NULL LIMIT 1');

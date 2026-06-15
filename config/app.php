@@ -12,6 +12,7 @@ return [
     'timezone' => env('APP_TIMEZONE', 'UTC'),
     'key' => env('APP_KEY', ''),
     'session_name' => env('SESSION_NAME', 'clinicflow_session'),
+    'session_domain' => env('SESSION_DOMAIN', ''),
     'default_slot_duration' => (int) env('DEFAULT_SLOT_DURATION', 30),
     'upload_max_mb' => (int) env('UPLOAD_MAX_MB', 5),
     'build' => $buildMeta,

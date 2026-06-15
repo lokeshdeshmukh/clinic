@@ -1,24 +1,39 @@
-<div class="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-    <div>
-        <p class="text-sm uppercase tracking-[0.22em] text-slate-500">Public directory</p>
-        <h1 class="text-3xl font-semibold">Clinics</h1>
+<section class="clinic-list-shell">
+    <div class="section-headline">
+        <div>
+            <p class="section-kicker">Public directory</p>
+            <h1>Choose a clinic</h1>
+            <p class="section-copy">Open a clinic page to view doctors, see consultation fees, and start booking from a mobile-friendly flow.</p>
+        </div>
+        <a href="<?= e(url('/patient/register')) ?>" class="btn-primary">Create patient account</a>
     </div>
-    <a href="<?= e(url('/patient/register')) ?>" class="btn-primary">Create Patient Account</a>
-</div>
 
-<div class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-    <?php foreach ($clinics as $clinic): ?>
-        <article class="panel">
-            <h2 class="text-xl font-semibold"><?= e($clinic['name']) ?></h2>
-            <p class="mt-2 text-sm leading-6 text-slate-600"><?= e($clinic['address']) ?></p>
-            <div class="mt-4 grid gap-2 text-sm text-slate-500">
-                <p>Email: <?= e($clinic['email']) ?></p>
-                <p>Phone: <?= e($clinic['phone']) ?></p>
-                <p>Doctors: <?= (int) $clinic['doctor_count'] ?></p>
-            </div>
-            <div class="mt-6">
-                <a href="<?= e(url('/clinics/' . $clinic['slug'])) ?>" class="btn-secondary w-full">Open clinic</a>
-            </div>
-        </article>
-    <?php endforeach; ?>
-</div>
+    <div class="clinic-list-grid">
+        <?php foreach ($clinics as $clinic): ?>
+            <article class="clinic-tile">
+                <div class="clinic-tile__top">
+                    <div class="clinic-tile__logo">
+                        <?php if (!empty($clinic['logo_path'])): ?>
+                            <img src="<?= e(url((string) $clinic['logo_path'])) ?>" alt="<?= e($clinic['name']) ?>" class="clinic-tile__logo-image">
+                        <?php else: ?>
+                            <?= e(strtoupper(substr((string) $clinic['name'], 0, 1))) ?>
+                        <?php endif; ?>
+                    </div>
+                    <div>
+                        <h2><?= e($clinic['name']) ?></h2>
+                        <p><?= e($clinic['address']) ?></p>
+                    </div>
+                </div>
+                <div class="clinic-tile__meta">
+                    <span><?= e($clinic['email']) ?></span>
+                    <span><?= e($clinic['phone']) ?></span>
+                    <span><?= (int) $clinic['doctor_count'] ?> doctors</span>
+                </div>
+                <div class="clinic-tile__actions">
+                    <a href="<?= e(url('/clinics/' . $clinic['slug'])) ?>" class="btn-primary">Open clinic</a>
+                    <a href="<?= e(url('/patient/login')) ?>" class="btn-secondary">Patient login</a>
+                </div>
+            </article>
+        <?php endforeach; ?>
+    </div>
+</section>

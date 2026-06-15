@@ -6,6 +6,7 @@ namespace App\Core;
 
 use App\Models\Clinic;
 use App\Models\Patient;
+use App\Models\SuperAdmin;
 
 final class Auth
 {
@@ -14,6 +15,7 @@ final class Auth
 
     public static function login(string $guard, int $id): void
     {
+        Session::regenerate();
         Session::put(self::SESSION_GUARD, $guard);
         Session::put(self::SESSION_ID, $id);
     }
@@ -22,6 +24,7 @@ final class Auth
     {
         Session::forget(self::SESSION_GUARD);
         Session::forget(self::SESSION_ID);
+        Session::regenerate();
     }
 
     public static function check(?string $guard = null): bool
@@ -60,6 +63,7 @@ final class Auth
         return match ($guard) {
             'clinic' => (new Clinic())->findActiveById($id),
             'patient' => (new Patient())->findActiveById($id),
+            'super_admin' => (new SuperAdmin())->findActiveById($id),
             default => null,
         };
     }

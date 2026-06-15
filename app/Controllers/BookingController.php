@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Controllers;
 
 use App\Core\Auth;
+use App\Core\ClinicContext;
 use App\Core\Controller;
 use App\Core\Request;
 use App\Models\Doctor;
@@ -20,13 +21,19 @@ final class BookingController extends Controller
     {
         $doctor = (new Doctor())->publicFind((int) $id);
         if (!$doctor) {
-            $this->redirect('/clinics', 'Doctor not found.', 'error');
+            $this->redirect(ClinicContext::isScoped() ? '/' : '/clinics', 'Doctor not found.', 'error');
+        }
+
+        $scopedClinic = ClinicContext::current();
+        if ($scopedClinic && (int) $doctor['clinic_id'] !== (int) $scopedClinic['id']) {
+            $this->redirect('/', 'This doctor is not available from this clinic link.', 'error');
         }
 
         $this->view('patient/book', [
             'title' => 'Book Appointment',
             'doctor' => $doctor,
             'patientLoggedIn' => Auth::check('patient'),
+            'redirectTo' => '/doctors/' . (int) $doctor['id'] . '/book',
         ]);
     }
 
@@ -34,6 +41,16 @@ final class BookingController extends Controller
     {
         $doctorId = (int) $id;
         $patientId = (int) Auth::id();
+        $doctor = (new Doctor())->publicFind($doctorId);
+
+        if (!$doctor) {
+            $this->redirect(ClinicContext::isScoped() ? '/' : '/clinics', 'Doctor not found.', 'error');
+        }
+
+        $scopedClinic = ClinicContext::current();
+        if ($scopedClinic && (int) $doctor['clinic_id'] !== (int) $scopedClinic['id']) {
+            $this->redirect('/', 'This doctor is not available from this clinic link.', 'error');
+        }
 
         try {
             $this->appointments->create(

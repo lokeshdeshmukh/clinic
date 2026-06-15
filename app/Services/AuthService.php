@@ -22,7 +22,9 @@ final class AuthService
 
     public function registerClinic(array $data, ?array $logoFile): array
     {
-        if ($this->clinics->findByEmail((string) $data['email'])) {
+        $email = normalize_email((string) $data['email']);
+
+        if ($this->clinics->findByEmail($email)) {
             throw new RuntimeException('A clinic with that email already exists.');
         }
 
@@ -33,7 +35,7 @@ final class AuthService
             'slug' => $slug,
             'address' => trim((string) $data['address']),
             'phone' => trim((string) $data['phone']),
-            'email' => trim((string) $data['email']),
+            'email' => $email,
             'password_hash' => password_hash((string) $data['password'], PASSWORD_DEFAULT),
             'logo_path' => $this->uploads->store($logoFile, 'clinics'),
             'email_verified_at' => null,
@@ -74,7 +76,7 @@ final class AuthService
 
     public function attemptClinicLogin(string $email, string $password): bool
     {
-        $clinic = $this->clinics->findByEmail($email);
+        $clinic = $this->clinics->findByEmail(normalize_email($email));
         if (!$clinic || !password_verify($password, (string) $clinic['password_hash'])) {
             return false;
         }
@@ -89,7 +91,9 @@ final class AuthService
 
     public function registerPatient(array $data): array
     {
-        if ($this->patients->findByEmail((string) $data['email'])) {
+        $email = normalize_email((string) $data['email']);
+
+        if ($this->patients->findByEmail($email)) {
             throw new RuntimeException('A patient with that email already exists.');
         }
 
@@ -97,13 +101,16 @@ final class AuthService
         $patientId = $this->patients->insert([
             'first_name' => trim((string) $data['first_name']),
             'last_name' => trim((string) $data['last_name']),
-            'email' => trim((string) $data['email']),
-            'phone' => trim((string) $data['phone']),
+            'email' => $email,
+            'email_verified_at' => null,
+            'phone' => trim((string) $data['phone']) ?: null,
+            'phone_verified_at' => null,
             'password_hash' => password_hash((string) $data['password'], PASSWORD_DEFAULT),
             'date_of_birth' => $data['date_of_birth'] ?: null,
             'gender' => $data['gender'] ?: null,
             'reset_token' => null,
             'reset_token_expires_at' => null,
+            'last_login_at' => null,
             'created_at' => $now,
             'updated_at' => $now,
             'deleted_at' => null,
@@ -118,12 +125,13 @@ final class AuthService
 
     public function attemptPatientLogin(string $email, string $password): bool
     {
-        $patient = $this->patients->findByEmail($email);
-        if (!$patient || !password_verify($password, (string) $patient['password_hash'])) {
+        $patient = $this->patients->findByEmail(normalize_email($email));
+        if (!$patient || empty($patient['password_hash']) || !password_verify($password, (string) $patient['password_hash'])) {
             return false;
         }
 
         Auth::login('patient', (int) $patient['id']);
+        $this->patients->touchLogin((int) $patient['id']);
         return true;
     }
 
@@ -169,7 +177,7 @@ final class AuthService
 
     public function sendPatientResetLink(string $email): void
     {
-        $patient = $this->patients->findByEmail($email);
+        $patient = $this->patients->findByEmail(normalize_email($email));
         if (!$patient) {
             return;
         }
@@ -207,6 +215,40 @@ final class AuthService
         return true;
     }
 
+    public function createClinicBySuperAdmin(array $data, ?array $logoFile): array
+    {
+        $email = normalize_email((string) $data['email']);
+        if ($this->clinics->findByEmail($email)) {
+            throw new RuntimeException('A clinic with that email already exists.');
+        }
+
+        $slugInput = trim((string) ($data['slug'] ?? ''));
+        $slug = $slugInput !== '' ? $this->generateUniqueSlug($slugInput) : $this->generateUniqueSlug((string) $data['name']);
+        $now = date('Y-m-d H:i:s');
+        $clinicId = $this->clinics->insert([
+            'name' => trim((string) $data['name']),
+            'slug' => $slug,
+            'address' => trim((string) $data['address']),
+            'phone' => trim((string) $data['phone']),
+            'email' => $email,
+            'password_hash' => password_hash((string) $data['password'], PASSWORD_DEFAULT),
+            'logo_path' => $this->uploads->store($logoFile, 'clinics'),
+            'email_verified_at' => $now,
+            'verification_token' => null,
+            'reset_token' => null,
+            'reset_token_expires_at' => null,
+            'status' => 'active',
+            'created_at' => $now,
+            'updated_at' => $now,
+            'deleted_at' => null,
+        ]);
+
+        $clinic = $this->clinics->findActiveById($clinicId);
+        $this->notifications->sendClinicWelcome($clinic);
+
+        return $clinic;
+    }
+
     private function generateUniqueSlug(string $name): string
     {
         $base = trim(preg_replace('/[^a-z0-9]+/i', '-', strtolower($name)), '-');
@@ -214,7 +256,7 @@ final class AuthService
         $suffix = 1;
 
         while ($this->clinics->slugExists($slug)) {
-            $slug = $base . '-' . $suffix;
+            $slug = ($base !== '' ? $base : 'clinic') . '-' . $suffix;
             $suffix++;
         }
 

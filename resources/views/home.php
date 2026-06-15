@@ -1,84 +1,90 @@
-<section class="grid gap-8 lg:grid-cols-[1.1fr_0.9fr]">
-    <div class="panel overflow-hidden bg-slate-950 text-white">
-        <div class="absolute"></div>
-        <div class="mb-4 flex flex-wrap items-center gap-3">
-            <p class="text-sm uppercase tracking-[0.28em] text-slate-300">Mobile-first clinic booking</p>
-            <span class="rounded-full border border-white/15 bg-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-cyan-100">
-                Version <?= e(config('app.build.version')) ?>
-            </span>
-        </div>
-        <h1 class="max-w-2xl text-4xl font-semibold text-white sm:text-5xl">Appointment scheduling that feels simple for patients and reliable for clinics.</h1>
-        <p class="mt-5 max-w-2xl text-base leading-7 text-slate-300">ClinicFlow helps small clinics manage doctors, availability, appointments, reminders, revenue, and reporting from one responsive workflow.</p>
-        <p class="mt-4 text-sm text-slate-400">
-            Live build <?= e(config('app.build.version')) ?>
-            <?php if ((string) config('app.build.commit') !== ''): ?>
-                <span class="text-slate-500">/</span> commit <?= e(config('app.build.commit')) ?>
-            <?php endif; ?>
-            <?php if ((string) config('app.build.deployed_at') !== ''): ?>
-                <span class="text-slate-500">/</span> deployed <?= e((string) config('app.build.deployed_at')) ?>
-            <?php endif; ?>
-        </p>
-        <div class="mt-8 flex flex-wrap gap-3">
-            <a href="<?= e(url('/clinics')) ?>" class="btn-primary">Browse Clinics</a>
-            <a href="<?= e(url('/clinic/register')) ?>" class="btn-secondary border-white/20 bg-white/10 text-white hover:bg-white/20">Register Clinic</a>
-        </div>
-        <div class="mt-10 grid gap-4 sm:grid-cols-3">
-            <div class="rounded-3xl border border-white/10 bg-white/5 p-4">
-                <p class="text-3xl font-semibold text-white">24h</p>
-                <p class="mt-2 text-sm text-slate-300">Automated reminder flow</p>
+<section class="directory-shell">
+    <div class="directory-hero">
+        <div class="directory-hero__copy">
+            <span class="eyebrow-pill">Built for clinic links shared on WhatsApp</span>
+            <h1>One booking system for every clinic, with a patient experience that feels like a dedicated app.</h1>
+            <p>Each clinic can use the same platform while getting its own mobile-first booking surface, doctor listing, patient login, reminders, and appointment flow.</p>
+            <div class="hero-actions">
+                <a href="<?= e(url('/clinics')) ?>" class="btn-primary">Browse clinics</a>
+                <a href="<?= e(url('/clinic/register')) ?>" class="btn-secondary">Register clinic</a>
             </div>
-            <div class="rounded-3xl border border-white/10 bg-white/5 p-4">
-                <p class="text-3xl font-semibold text-white">0</p>
-                <p class="mt-2 text-sm text-slate-300">Double-booking tolerance with guarded slot keys</p>
-            </div>
-            <div class="rounded-3xl border border-white/10 bg-white/5 p-4">
-                <p class="text-3xl font-semibold text-white">3</p>
-                <p class="mt-2 text-sm text-slate-300">Export formats: PDF, Excel, CSV</p>
+        </div>
+        <div class="directory-preview">
+            <div class="preview-phone">
+                <div class="preview-phone__top">
+                    <span>Clinic microsite</span>
+                    <span>v<?= e(config('app.build.version')) ?></span>
+                </div>
+                <div class="preview-phone__card preview-phone__card--brand">
+                    <p class="preview-phone__label">Patient first</p>
+                    <h2>Book a consultation in under a minute.</h2>
+                    <p>Subdomain-based clinic pages, live slots, and login-aware booking journeys.</p>
+                </div>
+                <div class="preview-phone__grid">
+                    <div class="preview-phone__card">
+                        <strong>Live slots</strong>
+                        <span>Doctor availability stays protected from double booking.</span>
+                    </div>
+                    <div class="preview-phone__card">
+                        <strong>Clinic identity</strong>
+                        <span>Each clinic gets its own logo, name, phone, and direct booking link.</span>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
-    <div class="grid gap-4">
-        <div class="panel">
-            <p class="text-sm font-semibold uppercase tracking-[0.22em] text-brand-700">For clinics</p>
-            <h2 class="mt-3 text-2xl font-semibold">Admin dashboard, doctor schedules, revenue and reports.</h2>
-            <p class="mt-3 text-sm leading-6 text-slate-600">Manage weekly schedules, date overrides, holidays, blocked slots, and appointment status changes from a single workflow.</p>
-        </div>
-        <div class="panel">
-            <p class="text-sm font-semibold uppercase tracking-[0.22em] text-accent-600">For patients</p>
-            <h2 class="mt-3 text-2xl font-semibold">Search clinics, view live slots, and book online.</h2>
-            <p class="mt-3 text-sm leading-6 text-slate-600">Patients can register, book, reschedule, cancel, and review their appointment history across devices.</p>
-        </div>
+
+    <div class="feature-band">
+        <article class="feature-band__item">
+            <span class="feature-band__number">01</span>
+            <h3>Single codebase, clinic-specific UI</h3>
+            <p>Use one deployment directory and route the visitor into the correct clinic experience based on the subdomain.</p>
+        </article>
+        <article class="feature-band__item">
+            <span class="feature-band__number">02</span>
+            <h3>Optimized for mobile booking</h3>
+            <p>Patients can land from a WhatsApp link, sign in, pick a doctor, choose a slot, and confirm quickly.</p>
+        </article>
+        <article class="feature-band__item">
+            <span class="feature-band__number">03</span>
+            <h3>Reliable clinic operations</h3>
+            <p>Doctor schedules, reminders, revenue tracking, and reports stay available in the admin dashboard.</p>
+        </article>
     </div>
 </section>
 
-<section class="mt-8">
-    <div class="mb-4 flex items-end justify-between">
+<section class="clinic-list-shell">
+    <div class="section-headline">
         <div>
-            <p class="text-sm uppercase tracking-[0.22em] text-slate-500">Featured clinics</p>
-            <h2 class="text-2xl font-semibold">Start by selecting a clinic</h2>
+            <p class="section-kicker">Featured clinics</p>
+            <h2>Open the direct booking experience</h2>
         </div>
-        <a href="<?= e(url('/clinics')) ?>" class="text-sm font-semibold text-brand-700">View all clinics</a>
+        <span class="section-badge">Build <?= e(config('app.build.version')) ?></span>
     </div>
-    <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+
+    <div class="clinic-list-grid">
         <?php foreach ($clinics as $clinic): ?>
-            <article class="panel">
-                <div class="flex items-start gap-4">
-                    <div class="flex h-14 w-14 items-center justify-center overflow-hidden rounded-2xl bg-brand-100 text-xl font-semibold text-brand-700">
+            <article class="clinic-tile">
+                <div class="clinic-tile__top">
+                    <div class="clinic-tile__logo">
                         <?php if (!empty($clinic['logo_path'])): ?>
-                            <img src="<?= e(url($clinic['logo_path'])) ?>" alt="<?= e($clinic['name']) ?>" class="h-full w-full object-cover">
+                            <img src="<?= e(url((string) $clinic['logo_path'])) ?>" alt="<?= e($clinic['name']) ?>" class="clinic-tile__logo-image">
                         <?php else: ?>
-                            <?= e(substr((string) $clinic['name'], 0, 1)) ?>
+                            <?= e(strtoupper(substr((string) $clinic['name'], 0, 1))) ?>
                         <?php endif; ?>
                     </div>
-                    <div class="min-w-0 flex-1">
-                        <h3 class="text-lg font-semibold"><?= e($clinic['name']) ?></h3>
-                        <p class="mt-1 text-sm text-slate-600"><?= e($clinic['address']) ?></p>
-                        <p class="mt-2 text-sm text-slate-500"><?= (int) $clinic['doctor_count'] ?> doctors</p>
+                    <div>
+                        <h3><?= e($clinic['name']) ?></h3>
+                        <p><?= e($clinic['address']) ?></p>
                     </div>
                 </div>
-                <div class="mt-5 flex items-center justify-between">
-                    <span class="text-sm text-slate-500"><?= e($clinic['phone']) ?></span>
-                    <a href="<?= e(url('/clinics/' . $clinic['slug'])) ?>" class="btn-secondary px-4 py-2">View doctors</a>
+                <div class="clinic-tile__meta">
+                    <span><?= (int) $clinic['doctor_count'] ?> doctors</span>
+                    <span><?= e($clinic['phone']) ?></span>
+                </div>
+                <div class="clinic-tile__actions">
+                    <a href="<?= e(url('/clinics/' . $clinic['slug'])) ?>" class="btn-primary">Open clinic</a>
+                    <a href="<?= e(url('/patient/register')) ?>" class="btn-secondary">Patient signup</a>
                 </div>
             </article>
         <?php endforeach; ?>

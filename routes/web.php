@@ -14,6 +14,8 @@ use App\Controllers\PatientAuthController;
 use App\Controllers\PatientDashboardController;
 use App\Controllers\ReportsController;
 use App\Controllers\SettingsController;
+use App\Controllers\SuperAdminAuthController;
+use App\Controllers\SuperAdminClinicController;
 
 $router->get('/', [ClinicDirectoryController::class, 'home']);
 $router->post('/deploy/run-updates', [DeployController::class, 'runUpdates']);
@@ -33,11 +35,20 @@ $router->get('/patient/register', [PatientAuthController::class, 'showRegister']
 $router->post('/patient/register', [PatientAuthController::class, 'register'], ['guest', 'csrf']);
 $router->get('/patient/login', [PatientAuthController::class, 'showLogin'], ['guest']);
 $router->post('/patient/login', [PatientAuthController::class, 'login'], ['guest', 'csrf']);
+$router->post('/patient/login/otp/send', [PatientAuthController::class, 'sendOtp'], ['guest', 'csrf']);
+$router->post('/patient/login/otp/verify', [PatientAuthController::class, 'verifyOtp'], ['guest', 'csrf']);
+$router->post('/patient/login/google', [PatientAuthController::class, 'googleLogin'], ['guest', 'csrf']);
 $router->post('/patient/logout', [PatientAuthController::class, 'logout'], ['auth:patient', 'csrf']);
 $router->get('/patient/forgot-password', [PatientAuthController::class, 'showForgotPassword'], ['guest']);
 $router->post('/patient/forgot-password', [PatientAuthController::class, 'sendResetLink'], ['guest', 'csrf']);
 $router->get('/patient/reset-password', [PatientAuthController::class, 'showResetPassword'], ['guest']);
 $router->post('/patient/reset-password', [PatientAuthController::class, 'resetPassword'], ['guest', 'csrf']);
+
+$router->get('/super-admin/setup', [SuperAdminAuthController::class, 'showSetup'], ['guest']);
+$router->post('/super-admin/setup', [SuperAdminAuthController::class, 'setup'], ['guest', 'csrf']);
+$router->get('/super-admin/login', [SuperAdminAuthController::class, 'showLogin'], ['guest']);
+$router->post('/super-admin/login', [SuperAdminAuthController::class, 'login'], ['guest', 'csrf']);
+$router->post('/super-admin/logout', [SuperAdminAuthController::class, 'logout'], ['auth:super_admin', 'csrf']);
 
 $router->get('/clinics', [ClinicDirectoryController::class, 'index']);
 $router->get('/clinics/{slug}', [ClinicDirectoryController::class, 'showClinic']);
@@ -66,7 +77,12 @@ $router->get('/admin/reports', [ReportsController::class, 'index'], ['auth:clini
 $router->get('/admin/reports/export', [ReportsController::class, 'export'], ['auth:clinic']);
 $router->get('/admin/settings', [SettingsController::class, 'edit'], ['auth:clinic']);
 $router->post('/admin/settings', [SettingsController::class, 'update'], ['auth:clinic', 'csrf']);
+$router->post('/admin/settings/doctor-hours', [SettingsController::class, 'storeDoctorHours'], ['auth:clinic', 'csrf']);
+$router->post('/admin/settings/doctor-hours/{id}/delete', [SettingsController::class, 'deleteDoctorHours'], ['auth:clinic', 'csrf']);
 
 $router->get('/patient/dashboard', [PatientDashboardController::class, 'index'], ['auth:patient']);
 $router->post('/patient/appointments/{id}/cancel', [PatientDashboardController::class, 'cancel'], ['auth:patient', 'csrf']);
 $router->post('/patient/appointments/{id}/reschedule', [PatientDashboardController::class, 'reschedule'], ['auth:patient', 'csrf']);
+
+$router->get('/super-admin/dashboard', [SuperAdminClinicController::class, 'index'], ['auth:super_admin']);
+$router->post('/super-admin/clinics', [SuperAdminClinicController::class, 'store'], ['auth:super_admin', 'csrf']);

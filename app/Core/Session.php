@@ -15,12 +15,18 @@ final class Session
             return;
         }
 
-        session_name($name);
-        session_set_cookie_params([
+        $domain = trim((string) config('app.session_domain', ''));
+        $cookieParams = [
             'httponly' => true,
             'samesite' => 'Lax',
             'secure' => isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off',
-        ]);
+        ];
+        if ($domain !== '') {
+            $cookieParams['domain'] = $domain;
+        }
+
+        session_name($name);
+        session_set_cookie_params($cookieParams);
         session_start();
 
         $_SESSION[self::FLASH_KEY] ??= [];
@@ -51,6 +57,13 @@ final class Session
         }
     }
 
+    public static function regenerate(): void
+    {
+        if (session_status() === PHP_SESSION_ACTIVE) {
+            session_regenerate_id(true);
+        }
+    }
+
     public static function flash(string $key, string $message): void
     {
         $_SESSION[self::FLASH_KEY][$key] = $message;
@@ -66,7 +79,7 @@ final class Session
 
     public static function flashInput(array $input): void
     {
-        unset($input['_token'], $input['password'], $input['password_confirmation']);
+        unset($input['_token'], $input['password'], $input['password_confirmation'], $input['otp']);
         $_SESSION[self::FLASH_OLD_INPUT] = $input;
     }
 

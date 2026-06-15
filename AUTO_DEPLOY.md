@@ -9,6 +9,23 @@ This project now fits a Hostinger Git deployment flow better than an FTP push wo
 3. Deploy the `main` branch to your live app folder
 4. Keep live secrets outside the deployed repository
 
+## Clinic subdomain behavior
+
+This application now supports a single-clinic patient experience based on the request host.
+
+Example:
+
+- `appointment.huviena.com` can stay as the central app domain
+- `sudarshan-clinic.huviena.com` can open the Sudarshan Clinic patient experience automatically
+
+Current assumption:
+
+- the first subdomain label must match the clinic `slug`
+
+So if the clinic slug is `sudarshan-clinic`, the subdomain should be:
+
+- `sudarshan-clinic.huviena.com`
+
 ## Protecting the live env file
 
 This app supports an external server-only environment file.

@@ -43,6 +43,14 @@ final class AvailabilityService
             throw new RuntimeException('Start and end times are required for time-based rules.');
         }
 
+        if ($startTime && $endTime && strtotime($startTime) >= strtotime($endTime)) {
+            throw new RuntimeException('End time must be later than start time.');
+        }
+
+        if ($ruleType === 'weekly' && $weekday !== null) {
+            $this->rules->softDeleteWeeklyForDoctor($clinicId, (int) $data['doctor_id'], $weekday);
+        }
+
         $now = date('Y-m-d H:i:s');
         $this->rules->insert([
             'clinic_id' => $clinicId,
@@ -60,6 +68,20 @@ final class AvailabilityService
             'created_at' => $now,
             'updated_at' => $now,
             'deleted_at' => null,
+        ]);
+    }
+
+    public function saveWeeklyRule(int $clinicId, array $data): void
+    {
+        $this->createRule($clinicId, [
+            'doctor_id' => (int) ($data['doctor_id'] ?? 0),
+            'rule_type' => 'weekly',
+            'weekday' => (string) ($data['weekday'] ?? ''),
+            'specific_date' => null,
+            'start_time' => (string) ($data['start_time'] ?? ''),
+            'end_time' => (string) ($data['end_time'] ?? ''),
+            'slot_interval_minutes' => (string) ($data['slot_interval_minutes'] ?? ''),
+            'reason' => trim((string) ($data['reason'] ?? 'Weekly clinic schedule')),
         ]);
     }
 

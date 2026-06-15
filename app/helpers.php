@@ -46,7 +46,11 @@ function view_path(string $path = ''): string
 
 function url(string $path = ''): string
 {
-    $root = rtrim((string) config('app.url', ''), '/');
+    if (preg_match('#^https?://#i', $path) === 1) {
+        return $path;
+    }
+
+    $root = rtrim(request_origin(), '/');
     $path = ltrim($path, '/');
 
     return $path === '' ? $root : $root . '/' . $path;
@@ -95,4 +99,62 @@ function selected(mixed $left, mixed $right): string
 function checked(mixed $left, mixed $right): string
 {
     return (string) $left === (string) $right ? 'checked' : '';
+}
+
+function normalize_email(string $email): string
+{
+    return strtolower(trim($email));
+}
+
+function normalize_phone(string $phone): string
+{
+    return preg_replace('/\D+/', '', trim($phone)) ?? '';
+}
+
+function split_name(string $value, string $fallback = 'Patient'): array
+{
+    $value = trim(preg_replace('/\s+/', ' ', $value) ?? '');
+    if ($value === '') {
+        $value = $fallback;
+    }
+
+    $parts = preg_split('/\s+/', $value) ?: [$fallback];
+    $first = trim((string) ($parts[0] ?? $fallback));
+    $last = trim(implode(' ', array_slice($parts, 1)));
+
+    return [
+        'first_name' => $first !== '' ? $first : $fallback,
+        'last_name' => $last !== '' ? $last : 'User',
+    ];
+}
+
+function request_base_path(): string
+{
+    $scriptName = str_replace('\\', '/', (string) ($_SERVER['SCRIPT_NAME'] ?? ''));
+    $basePath = rtrim(dirname($scriptName), '/');
+
+    return $basePath === '/' ? '' : $basePath;
+}
+
+function request_origin(): string
+{
+    $host = trim((string) ($_SERVER['HTTP_HOST'] ?? $_SERVER['SERVER_NAME'] ?? ''));
+    if ($host === '') {
+        return (string) config('app.url', 'http://localhost');
+    }
+
+    $scheme = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https://' : 'http://';
+    $basePath = request_base_path();
+
+    return rtrim($scheme . $host . $basePath, '/');
+}
+
+function current_clinic(): ?array
+{
+    return \App\Core\ClinicContext::current();
+}
+
+function clinic_is_scoped(): bool
+{
+    return \App\Core\ClinicContext::isScoped();
 }
