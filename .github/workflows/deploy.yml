@@ -8,11 +8,22 @@ on:
 
 jobs:
   deploy:
-    if: ${{ secrets.FTP_SERVER != '' && secrets.FTP_USERNAME != '' && secrets.FTP_PASSWORD != '' && secrets.FTP_REMOTE_DIR != '' }}
     runs-on: ubuntu-latest
+    env:
+      FTP_SERVER: ${{ secrets.FTP_SERVER }}
+      FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
+      FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
+      FTP_REMOTE_DIR: ${{ secrets.FTP_REMOTE_DIR }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Validate FTP secrets
+        run: |
+          test -n "$FTP_SERVER" || { echo "Missing secret: FTP_SERVER"; exit 1; }
+          test -n "$FTP_USERNAME" || { echo "Missing secret: FTP_USERNAME"; exit 1; }
+          test -n "$FTP_PASSWORD" || { echo "Missing secret: FTP_PASSWORD"; exit 1; }
+          test -n "$FTP_REMOTE_DIR" || { echo "Missing secret: FTP_REMOTE_DIR"; exit 1; }
 
       - name: Generate build version metadata
         run: |
@@ -31,10 +42,10 @@ jobs:
       - name: Deploy files by FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
-          server: ${{ secrets.FTP_SERVER }}
-          username: ${{ secrets.FTP_USERNAME }}
-          password: ${{ secrets.FTP_PASSWORD }}
-          server-dir: ${{ secrets.FTP_REMOTE_DIR }}
+          server: ${{ env.FTP_SERVER }}
+          username: ${{ env.FTP_USERNAME }}
+          password: ${{ env.FTP_PASSWORD }}
+          server-dir: ${{ env.FTP_REMOTE_DIR }}
           exclude: |
             **/.git*
             **/.github/**
@@ -52,8 +63,13 @@ jobs:
 
   run-updates:
     needs: deploy
-    if: ${{ secrets.FTP_SERVER != '' && secrets.FTP_USERNAME != '' && secrets.FTP_PASSWORD != '' && secrets.FTP_REMOTE_DIR != '' && secrets.DEPLOY_HOOK_URL != '' }}
     runs-on: ubuntu-latest
+    env:
+      DEPLOY_HOOK_URL: ${{ secrets.DEPLOY_HOOK_URL }}
     steps:
+      - name: Validate deploy hook secret
+        run: |
+          test -n "$DEPLOY_HOOK_URL" || { echo "Missing secret: DEPLOY_HOOK_URL"; exit 1; }
+
       - name: Trigger remote migration hook
-        run: curl -fsSL -X POST "${{ secrets.DEPLOY_HOOK_URL }}"
+        run: curl -fsSL -X POST "$DEPLOY_HOOK_URL"
