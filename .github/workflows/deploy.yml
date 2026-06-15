@@ -6,6 +6,9 @@ on:
       - main
   workflow_dispatch:
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -24,6 +27,18 @@ jobs:
           test -n "$FTP_USERNAME" || { echo "Missing secret: FTP_USERNAME"; exit 1; }
           test -n "$FTP_PASSWORD" || { echo "Missing secret: FTP_PASSWORD"; exit 1; }
           test -n "$FTP_REMOTE_DIR" || { echo "Missing secret: FTP_REMOTE_DIR"; exit 1; }
+          case "$FTP_SERVER" in
+            *://*)
+              echo "FTP_SERVER must be a hostname only, without http://, https://, or ftp://"
+              exit 1
+              ;;
+          esac
+          case "$FTP_SERVER" in
+            */*)
+              echo "FTP_SERVER must not contain a path. Put the folder in FTP_REMOTE_DIR instead."
+              exit 1
+              ;;
+          esac
 
       - name: Generate build version metadata
         run: |
@@ -42,6 +57,8 @@ jobs:
       - name: Deploy files by FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
+          protocol: ftp
+          port: 21
           server: ${{ env.FTP_SERVER }}
           username: ${{ env.FTP_USERNAME }}
           password: ${{ env.FTP_PASSWORD }}
