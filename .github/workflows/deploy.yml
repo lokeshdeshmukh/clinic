@@ -14,6 +14,20 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Generate build version metadata
+        run: |
+          SHORT_SHA="${GITHUB_SHA::7}"
+          DEPLOYED_AT="$(date -u +"%Y-%m-%d %H:%M:%S UTC")"
+          mkdir -p storage
+          cat > storage/app_version.json <<EOF
+          {
+            "version": "0.0.0.${GITHUB_RUN_NUMBER}",
+            "commit": "${SHORT_SHA}",
+            "deployed_at": "${DEPLOYED_AT}",
+            "source": "github-actions"
+          }
+          EOF
+
       - name: Deploy files by FTP
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:

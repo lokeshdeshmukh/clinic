@@ -67,5 +67,17 @@ $flashError = Session::getFlash('error');
         <?php endif; ?>
         <?= $content ?>
     </main>
+    <footer class="border-t border-slate-200 bg-white/70">
+        <div class="mx-auto flex max-w-7xl flex-col gap-2 px-4 py-4 text-xs text-slate-500 sm:px-6 lg:flex-row lg:items-center lg:justify-between lg:px-8">
+            <p><?= e(config('app.name')) ?> build <?= e(config('app.build.version')) ?></p>
+            <p>
+                commit <?= e(config('app.build.commit')) ?>
+                <?php if ((string) config('app.build.deployed_at') !== ''): ?>
+                    <span class="mx-1">|</span>
+                    deployed <?= e((string) config('app.build.deployed_at')) ?>
+                <?php endif; ?>
+            </p>
+        </div>
+    </footer>
 </body>
 </html>

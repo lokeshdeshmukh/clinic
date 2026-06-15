@@ -1,9 +1,23 @@
 <section class="grid gap-8 lg:grid-cols-[1.1fr_0.9fr]">
     <div class="panel overflow-hidden bg-slate-950 text-white">
         <div class="absolute"></div>
-        <p class="mb-4 text-sm uppercase tracking-[0.28em] text-slate-300">Mobile-first clinic booking</p>
+        <div class="mb-4 flex flex-wrap items-center gap-3">
+            <p class="text-sm uppercase tracking-[0.28em] text-slate-300">Mobile-first clinic booking</p>
+            <span class="rounded-full border border-white/15 bg-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-cyan-100">
+                Version <?= e(config('app.build.version')) ?>
+            </span>
+        </div>
         <h1 class="max-w-2xl text-4xl font-semibold text-white sm:text-5xl">Appointment scheduling that feels simple for patients and reliable for clinics.</h1>
         <p class="mt-5 max-w-2xl text-base leading-7 text-slate-300">ClinicFlow helps small clinics manage doctors, availability, appointments, reminders, revenue, and reporting from one responsive workflow.</p>
+        <p class="mt-4 text-sm text-slate-400">
+            Live build <?= e(config('app.build.version')) ?>
+            <?php if ((string) config('app.build.commit') !== ''): ?>
+                <span class="text-slate-500">/</span> commit <?= e(config('app.build.commit')) ?>
+            <?php endif; ?>
+            <?php if ((string) config('app.build.deployed_at') !== ''): ?>
+                <span class="text-slate-500">/</span> deployed <?= e((string) config('app.build.deployed_at')) ?>
+            <?php endif; ?>
+        </p>
         <div class="mt-8 flex flex-wrap gap-3">
             <a href="<?= e(url('/clinics')) ?>" class="btn-primary">Browse Clinics</a>
             <a href="<?= e(url('/clinic/register')) ?>" class="btn-secondary border-white/20 bg-white/10 text-white hover:bg-white/20">Register Clinic</a>
