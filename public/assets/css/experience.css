@@ -148,27 +148,41 @@ body.is-patient-surface .site-header-shell{
   background:rgba(255,255,255,.92);
   backdrop-filter:blur(18px);
   box-shadow:var(--shadow);
+  position:sticky;
+  top:10px;
+  z-index:45;
 }
 
 .site-mobile-topbar__menu{
-  display:grid;
-  gap:4px;
+  display:inline-flex;
+  align-items:center;
+  gap:10px;
   flex-shrink:0;
-  width:40px;
+  width:auto;
   height:40px;
-  padding:0;
+  padding:0 12px;
   border-radius:14px;
   border:1px solid var(--line);
   background:#fff;
-  place-content:center;
 }
 
-.site-mobile-topbar__menu span{
+.site-mobile-topbar__menu-icon{
+  display:grid;
+  gap:4px;
+}
+
+.site-mobile-topbar__menu-icon span{
   display:block;
   width:18px;
   height:2px;
   border-radius:999px;
   background:#27405e;
+}
+
+.site-mobile-topbar__menu-label{
+  font-size:.8rem;
+  font-weight:800;
+  color:#27405e;
 }
 
 .site-mobile-topbar__brand{
@@ -232,6 +246,14 @@ body.is-patient-surface .site-header-shell{
   display:flex;
   flex-direction:column;
   gap:20px;
+  transform:translateX(-24px);
+  opacity:0;
+  transition:transform .2s ease, opacity .2s ease;
+}
+
+.site-scoped-drawer.is-open .site-scoped-drawer__panel{
+  transform:translateX(0);
+  opacity:1;
 }
 
 .site-scoped-drawer__head{
@@ -1024,11 +1046,44 @@ body.is-patient-surface .site-main{
   font-size:1.12rem;
 }
 
+.booking-surface__section-copy{
+  margin-top:6px;
+  color:var(--muted);
+  font-size:.84rem;
+  line-height:1.5;
+}
+
 .booking-surface__section-badges{
   display:flex;
   flex-wrap:wrap;
   justify-content:flex-end;
   gap:8px;
+}
+
+.booking-date-pager{
+  display:grid;
+  grid-template-columns:auto minmax(0,1fr) auto;
+  align-items:center;
+  gap:8px;
+}
+
+.booking-date-pager__viewport{
+  overflow:hidden;
+}
+
+.booking-date-pager__nav{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  width:38px;
+  height:38px;
+  border-radius:12px;
+  border:1px solid var(--line);
+  background:#fff;
+  color:#27405e;
+  font-size:1.2rem;
+  font-weight:700;
+  box-shadow:0 10px 22px -18px rgba(40,100,220,.4);
 }
 
 .booking-surface__dates{
@@ -1037,6 +1092,7 @@ body.is-patient-surface .site-main{
   overflow-x:auto;
   padding:2px 2px 6px;
   scrollbar-width:none;
+  scroll-snap-type:x proximity;
 }
 
 .booking-surface__dates::-webkit-scrollbar{
@@ -1244,7 +1300,7 @@ body.is-patient-surface .site-main{
 
 .quick-date-pill{
   flex-direction:column;
-  flex:0 0 84px;
+  flex:0 0 88px;
   scroll-snap-align:start;
 }
 
@@ -1542,6 +1598,7 @@ body.is-patient-surface .site-main{
 
 .slot-chip:hover,
 .quick-date-pill:hover,
+.booking-date-pager__nav:hover,
 .btn-secondary:hover,
 .auth-method-tab:hover,
 .site-mobile-topbar__action:hover,
@@ -1554,6 +1611,7 @@ body.is-patient-surface .site-main{
 
 .slot-chip:focus-visible,
 .quick-date-pill:focus-visible,
+.booking-date-pager__nav:focus-visible,
 .btn-primary:focus-visible,
 .btn-secondary:focus-visible,
 .auth-method-tab:focus-visible,
@@ -1647,6 +1705,17 @@ body.is-patient-surface .site-main{
 
   .booking-surface__section-badges{
     justify-content:flex-start;
+  }
+
+  .booking-date-pager{
+    grid-template-columns:34px minmax(0,1fr) 34px;
+    gap:6px;
+  }
+
+  .booking-date-pager__nav{
+    width:34px;
+    height:34px;
+    font-size:1rem;
   }
 
   .booking-surface__calendar-input{

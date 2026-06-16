@@ -52,6 +52,8 @@ document.addEventListener("DOMContentLoaded", () => {
     const slotInput = document.querySelector("[data-slot-input]");
     const bookingSubmitButton = document.querySelector("[data-booking-submit]");
     const quickDateButtons = Array.from(document.querySelectorAll("[data-quick-date]"));
+    const dateStrip = document.querySelector("[data-date-strip]");
+    const dateScrollButtons = Array.from(document.querySelectorAll("[data-date-scroll]"));
     const selectedDateLabel = document.querySelector("[data-selected-date-label]");
     const selectedDateLabelSecondary = document.querySelector("[data-selected-date-label-secondary]");
     const selectedTimeLabel = document.querySelector("[data-selected-time-label]");
@@ -153,6 +155,15 @@ document.addEventListener("DOMContentLoaded", () => {
       quickDateButtons.forEach((button) => {
         button.classList.toggle("is-active", button.dataset.quickDate === dateInput.value);
       });
+
+      const activeButton = quickDateButtons.find((button) => button.dataset.quickDate === dateInput.value);
+      if (activeButton) {
+        activeButton.scrollIntoView({
+          behavior: "smooth",
+          block: "nearest",
+          inline: "center"
+        });
+      }
 
       const label = formatDateLabel(dateInput.value);
       if (selectedDateLabel) {
@@ -642,6 +653,21 @@ document.addEventListener("DOMContentLoaded", () => {
         dateInput.value = button.dataset.quickDate || "";
         syncDateSelection();
         renderSlots();
+      });
+    });
+
+    dateScrollButtons.forEach((button) => {
+      button.addEventListener("click", () => {
+        if (!dateStrip) {
+          return;
+        }
+
+        const direction = button.dataset.dateScroll === "prev" ? -1 : 1;
+        const amount = Math.max(220, Math.round(dateStrip.clientWidth * 0.72));
+        dateStrip.scrollBy({
+          left: amount * direction,
+          behavior: "smooth"
+        });
       });
     });
 

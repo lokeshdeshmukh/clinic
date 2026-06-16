@@ -3,7 +3,7 @@
 use App\Core\Auth;
 
 $quickDates = [];
-for ($offset = 0; $offset < 7; $offset++) {
+for ($offset = 0; $offset < 14; $offset++) {
     $timestamp = strtotime('+' . $offset . ' day');
     $quickDates[] = [
         'value' => date('Y-m-d', $timestamp),
@@ -63,6 +63,7 @@ $clinicPhoneHref = !empty($doctor['clinic_phone'])
                 <div>
                     <p class="section-kicker">Select date</p>
                     <h2>Choose a day</h2>
+                    <p class="booking-surface__section-copy">Tap a date to view open times for this doctor.</p>
                 </div>
                 <div class="booking-surface__section-badges">
                     <span class="section-badge section-badge--soft" data-selected-date-label><?= e(date('D, d M', strtotime($quickDates[0]['value']))) ?></span>
@@ -70,17 +71,23 @@ $clinicPhoneHref = !empty($doctor['clinic_phone'])
                 </div>
             </div>
 
-            <div class="quick-date-grid booking-surface__dates">
-                <?php foreach ($quickDates as $index => $quickDate): ?>
-                    <button
-                        type="button"
-                        class="quick-date-pill<?= $index === 0 ? ' is-active' : '' ?>"
-                        data-quick-date="<?= e($quickDate['value']) ?>"
-                    >
-                        <span><?= e($quickDate['weekday']) ?></span>
-                        <strong><?= e($quickDate['day']) ?></strong>
-                    </button>
-                <?php endforeach; ?>
+            <div class="booking-date-pager">
+                <button type="button" class="booking-date-pager__nav" data-date-scroll="prev" aria-label="Show earlier dates">‹</button>
+                <div class="booking-date-pager__viewport" data-date-strip>
+                    <div class="quick-date-grid booking-surface__dates">
+                        <?php foreach ($quickDates as $index => $quickDate): ?>
+                            <button
+                                type="button"
+                                class="quick-date-pill<?= $index === 0 ? ' is-active' : '' ?>"
+                                data-quick-date="<?= e($quickDate['value']) ?>"
+                            >
+                                <span><?= e($quickDate['weekday']) ?></span>
+                                <strong><?= e($quickDate['day']) ?></strong>
+                            </button>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+                <button type="button" class="booking-date-pager__nav" data-date-scroll="next" aria-label="Show more dates">›</button>
             </div>
 
             <div class="booking-surface__calendar-input">
