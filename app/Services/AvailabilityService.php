@@ -108,6 +108,7 @@ final class AvailabilityService
 
         $weekday = (int) date('w', strtotime($date));
         $rules = $this->rules->forDoctorOnDate($doctorId, $date, $weekday);
+        $hasWeeklyRules = $this->rules->hasWeeklyRulesForDoctor($doctorId);
 
         $holidays = array_filter($rules, static fn (array $rule): bool => $rule['rule_type'] === 'holiday');
         if ($holidays !== []) {
@@ -117,7 +118,11 @@ final class AvailabilityService
         $overrideRules = array_values(array_filter($rules, static fn (array $rule): bool => $rule['rule_type'] === 'date_override' && (int) $rule['is_available'] === 1));
         $weeklyRules = array_values(array_filter($rules, static fn (array $rule): bool => $rule['rule_type'] === 'weekly' && (int) $rule['is_available'] === 1));
         $blockedRules = array_values(array_filter($rules, static fn (array $rule): bool => $rule['rule_type'] === 'blocked_slot'));
-        $activeRules = $overrideRules !== [] ? $overrideRules : $weeklyRules;
+        $activeRules = $overrideRules !== []
+            ? $overrideRules
+            : ($weeklyRules !== []
+                ? $weeklyRules
+                : ($hasWeeklyRules ? [] : [$this->defaultDailyRule($doctor)]));
 
         $slots = [];
         foreach ($activeRules as $rule) {
@@ -148,8 +153,18 @@ final class AvailabilityService
                 'start_time' => $slot['start_time'],
                 'end_time' => $slot['end_time'],
                 'label' => date('g:i A', strtotime($slot['start_time'])) . ' - ' . date('g:i A', strtotime($slot['end_time'])),
+                'period' => $this->slotPeriod((string) $slot['start_time']),
             ];
         }, $slots)));
+    }
+
+    private function defaultDailyRule(array $doctor): array
+    {
+        return [
+            'start_time' => (string) config('app.default_availability_start', '09:00:00'),
+            'end_time' => (string) config('app.default_availability_end', '18:00:00'),
+            'slot_interval_minutes' => (int) ($doctor['slot_duration_minutes'] ?: config('app.default_slot_duration', 30)),
+        ];
     }
 
     private function generateSlots(string $startTime, string $endTime, int $intervalMinutes): array
@@ -172,5 +187,20 @@ final class AvailabilityService
     private function overlaps(string $startA, string $endA, string $startB, string $endB): bool
     {
         return strtotime($startA) < strtotime($endB) && strtotime($endA) > strtotime($startB);
+    }
+
+    private function slotPeriod(string $startTime): string
+    {
+        $hour = (int) date('G', strtotime($startTime));
+
+        if ($hour < 12) {
+            return 'morning';
+        }
+
+        if ($hour < 17) {
+            return 'evening';
+        }
+
+        return 'night';
     }
 }

@@ -47,7 +47,7 @@
         <div>
             <p class="text-sm uppercase tracking-[0.22em] text-slate-500">Clinic timings</p>
             <h2 class="text-2xl font-semibold">Weekly doctor hours</h2>
-            <p class="mt-2 max-w-3xl text-sm text-slate-500">These weekly hours directly control which slots patients can see when booking. Use the detailed schedule page for holidays, blocked slots, and one-off date overrides.</p>
+            <p class="mt-2 max-w-3xl text-sm text-slate-500">These weekly hours directly control which slots patients can see when booking. If a doctor has no saved weekly hours yet, the app falls back to 9:00 AM to 6:00 PM with 30-minute default slots until you override it here. Use the detailed schedule page for holidays, blocked slots, and one-off date overrides.</p>
         </div>
         <a class="btn-secondary" href="<?= e(url('/admin/availability')) ?>">Open detailed schedule</a>
     </div>
@@ -80,16 +80,16 @@
             <div class="grid gap-4 md:grid-cols-2">
                 <div>
                     <label for="start_time">Start time</label>
-                    <input id="start_time" type="time" name="start_time" required>
+                    <input id="start_time" type="time" name="start_time" value="<?= e((string) old('start_time', '09:00')) ?>" required>
                 </div>
                 <div>
                     <label for="end_time">End time</label>
-                    <input id="end_time" type="time" name="end_time" required>
+                    <input id="end_time" type="time" name="end_time" value="<?= e((string) old('end_time', '18:00')) ?>" required>
                 </div>
             </div>
             <div>
                 <label for="slot_interval_minutes">Slot interval (minutes)</label>
-                <input id="slot_interval_minutes" type="number" name="slot_interval_minutes" placeholder="Leave blank to use doctor default slot duration">
+                <input id="slot_interval_minutes" type="number" name="slot_interval_minutes" value="<?= e((string) old('slot_interval_minutes', '30')) ?>" placeholder="Defaults to 30 minutes">
             </div>
             <button class="btn-primary" type="submit">Save weekly hours</button>
         </form>

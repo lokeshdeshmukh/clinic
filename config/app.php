@@ -14,6 +14,8 @@ return [
     'session_name' => env('SESSION_NAME', 'clinicflow_session'),
     'session_domain' => env('SESSION_DOMAIN', ''),
     'default_slot_duration' => (int) env('DEFAULT_SLOT_DURATION', 30),
+    'default_availability_start' => env('DEFAULT_AVAILABILITY_START', '09:00:00'),
+    'default_availability_end' => env('DEFAULT_AVAILABILITY_END', '18:00:00'),
     'upload_max_mb' => (int) env('UPLOAD_MAX_MB', 5),
     'build' => $buildMeta,
 ];

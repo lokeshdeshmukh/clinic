@@ -357,13 +357,64 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
     const renderSlotButtons = (slots) => {
-      slotContainer.innerHTML = slots.map((slot) => {
-        const [startLabel, endLabel] = String(slot.label || "").split(" - ");
+      const groupMeta = [
+        { key: "morning", label: "Morning" },
+        { key: "evening", label: "Evening" },
+        { key: "night", label: "Night" }
+      ];
+      const resolvePeriod = (slot) => {
+        if (slot.period && ["morning", "evening", "night"].includes(slot.period)) {
+          return slot.period;
+        }
+
+        const hour = Number(String(slot.start_time || "").split(":")[0]);
+        if (Number.isNaN(hour)) {
+          return "morning";
+        }
+
+        if (hour < 12) {
+          return "morning";
+        }
+
+        if (hour < 17) {
+          return "evening";
+        }
+
+        return "night";
+      };
+      const groupedSlots = slots.reduce((carry, slot) => {
+        const key = resolvePeriod(slot);
+        if (!carry[key]) {
+          carry[key] = [];
+        }
+
+        carry[key].push(slot);
+        return carry;
+      }, {});
+
+      slotContainer.innerHTML = groupMeta.map((group) => {
+        const items = groupedSlots[group.key] || [];
+        if (items.length === 0) {
+          return "";
+        }
+
         return `
-          <button type="button" data-slot-value="${escapeHtml(slot.start_time)}" data-slot-label="${escapeHtml(slot.label)}" class="slot-chip">
-            <strong class="slot-chip__time">${escapeHtml(startLabel || slot.label)}</strong>
-            <span class="slot-chip__range">${escapeHtml(endLabel || "Available")}</span>
-          </button>
+          <section class="slot-group">
+            <header class="slot-group__header">
+              <span class="slot-group__label">${escapeHtml(group.label)}</span>
+            </header>
+            <div class="slot-group__grid">
+              ${items.map((slot) => {
+                const [startLabel, endLabel] = String(slot.label || "").split(" - ");
+                return `
+                  <button type="button" data-slot-value="${escapeHtml(slot.start_time)}" data-slot-label="${escapeHtml(slot.label)}" class="slot-chip">
+                    <strong class="slot-chip__time">${escapeHtml(startLabel || slot.label)}</strong>
+                    <span class="slot-chip__range">${escapeHtml(endLabel || "Available")}</span>
+                  </button>
+                `;
+              }).join("")}
+            </div>
+          </section>
         `;
       }).join("");
     };

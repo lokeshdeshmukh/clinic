@@ -66,6 +66,19 @@ final class AvailabilityRule extends Model
         return $statement->fetchAll();
     }
 
+    public function hasWeeklyRulesForDoctor(int $doctorId): bool
+    {
+        $statement = $this->db->prepare('SELECT 1
+            FROM doctor_availability
+            WHERE doctor_id = :doctor_id
+              AND rule_type = "weekly"
+              AND deleted_at IS NULL
+            LIMIT 1');
+        $statement->execute(['doctor_id' => $doctorId]);
+
+        return (bool) $statement->fetchColumn();
+    }
+
     public function softDeleteWeeklyForDoctor(int $clinicId, int $doctorId, int $weekday): void
     {
         $sql = 'UPDATE doctor_availability
