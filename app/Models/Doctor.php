@@ -28,7 +28,8 @@ final class Doctor extends Model
 
     public function publicFind(int $id): ?array
     {
-        $sql = 'SELECT d.*, c.name AS clinic_name, c.slug AS clinic_slug, c.address AS clinic_address, c.phone AS clinic_phone
+        $sql = 'SELECT d.*, c.name AS clinic_name, c.slug AS clinic_slug, c.address AS clinic_address, c.phone AS clinic_phone,
+                       c.email AS clinic_email, c.logo_path AS clinic_logo_path
                 FROM doctors d
                 INNER JOIN clinics c ON c.id = d.clinic_id
                 WHERE d.id = :id AND d.deleted_at IS NULL AND d.status = "active" AND c.deleted_at IS NULL AND c.status = "active"

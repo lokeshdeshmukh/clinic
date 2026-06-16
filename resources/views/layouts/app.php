@@ -13,12 +13,46 @@ $requestPath = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/';
 $isManagementSurface = str_starts_with($requestPath, '/admin')
     || str_starts_with($requestPath, '/super-admin')
     || str_starts_with($requestPath, '/clinic/');
-$isPatientFacingScoped = $isScoped && !$isManagementSurface && $guard !== 'clinic' && $guard !== 'super_admin';
-$phoneHref = $isScoped && !empty($scopedClinic['phone'])
-    ? 'tel:' . preg_replace('/[^0-9+]/', '', (string) $scopedClinic['phone'])
+$publicClinicContext = $scopedClinic;
+if ($publicClinicContext === null && isset($clinic) && is_array($clinic)) {
+    $publicClinicContext = [
+        'name' => $clinic['name'] ?? config('app.name'),
+        'slug' => $clinic['slug'] ?? '',
+        'phone' => $clinic['phone'] ?? '',
+        'address' => $clinic['address'] ?? '',
+        'email' => $clinic['email'] ?? '',
+        'logo_path' => $clinic['logo_path'] ?? null,
+    ];
+}
+if ($publicClinicContext === null && isset($doctor) && is_array($doctor) && !empty($doctor['clinic_name'])) {
+    $publicClinicContext = [
+        'name' => $doctor['clinic_name'],
+        'slug' => $doctor['clinic_slug'] ?? '',
+        'phone' => $doctor['clinic_phone'] ?? '',
+        'address' => $doctor['clinic_address'] ?? '',
+        'email' => $doctor['clinic_email'] ?? '',
+        'logo_path' => $doctor['clinic_logo_path'] ?? null,
+    ];
+}
+$isPublicClinicRoute = str_starts_with($requestPath, '/clinics') || str_starts_with($requestPath, '/doctors');
+$isPatientFacingScoped = !$isManagementSurface
+    && $guard !== 'clinic'
+    && $guard !== 'super_admin'
+    && ($isScoped || ($isPublicClinicRoute && $publicClinicContext !== null));
+$phoneHref = $publicClinicContext !== null && !empty($publicClinicContext['phone'])
+    ? 'tel:' . preg_replace('/[^0-9+]/', '', (string) $publicClinicContext['phone'])
     : null;
-$brandInitial = $isScoped
-    ? strtoupper(substr((string) $scopedClinic['name'], 0, 1))
+$publicClinicHref = '/';
+if (!$isScoped && $publicClinicContext !== null && !empty($publicClinicContext['slug'])) {
+    $publicClinicHref = '/clinics/' . $publicClinicContext['slug'];
+}
+$publicBookingHref = $publicClinicHref;
+if (isset($doctor) && is_array($doctor) && !empty($doctor['id'])) {
+    $publicBookingHref = '/doctors/' . $doctor['id'] . '/book';
+}
+$footerBrandName = $publicClinicContext['name'] ?? ($isScoped ? (string) $scopedClinic['name'] : (string) config('app.name'));
+$brandInitial = $publicClinicContext !== null
+    ? strtoupper(substr((string) $publicClinicContext['name'], 0, 1))
     : 'H';
 $currentUserIdentity = $currentUser['email'] ?? $currentUser['phone'] ?? $currentUser['name'] ?? '';
 ?>
@@ -38,7 +72,7 @@ $currentUserIdentity = $currentUser['email'] ?? $currentUser['phone'] ?? $curren
     <script defer src="https://cdn.jsdelivr.net/npm/chart.js@4.4.6/dist/chart.umd.min.js"></script>
     <script defer src="<?= e(asset('js/app.js')) ?>"></script>
 </head>
-<body class="site-body<?= $isScoped ? ' is-clinic-scoped' : '' ?>" data-base-url="<?= e(url('')) ?>">
+<body class="site-body<?= $isScoped ? ' is-clinic-scoped' : '' ?><?= $isPatientFacingScoped ? ' is-patient-surface' : '' ?>" data-base-url="<?= e(url('')) ?>">
     <div class="site-backdrop"></div>
     <header class="site-header-shell">
         <?php if ($isPatientFacingScoped): ?>
@@ -55,9 +89,9 @@ $currentUserIdentity = $currentUser['email'] ?? $currentUser['phone'] ?? $curren
                     <span></span>
                     <span></span>
                 </button>
-                <a href="<?= e(url('/')) ?>" class="site-mobile-topbar__brand">
+                <a href="<?= e(url($publicClinicHref)) ?>" class="site-mobile-topbar__brand">
                     <span class="site-mobile-topbar__eyebrow">Clinic booking</span>
-                    <strong><?= e((string) $scopedClinic['name']) ?></strong>
+                    <strong><?= e((string) ($publicClinicContext['name'] ?? config('app.name'))) ?></strong>
                 </a>
                 <?php if ($guard === 'patient'): ?>
                     <a href="<?= e(url('/patient/dashboard')) ?>" class="site-mobile-topbar__action">My visits</a>
@@ -73,20 +107,21 @@ $currentUserIdentity = $currentUser['email'] ?? $currentUser['phone'] ?? $curren
                 <aside class="site-scoped-drawer__panel">
                     <div class="site-scoped-drawer__head">
                         <span class="site-brand__mark site-brand__mark--drawer">
-                            <?php if (!empty($scopedClinic['logo_path'])): ?>
-                                <img src="<?= e(url((string) $scopedClinic['logo_path'])) ?>" alt="<?= e($scopedClinic['name']) ?>" class="site-brand__logo">
+                            <?php if (!empty($publicClinicContext['logo_path'])): ?>
+                                <img src="<?= e(url((string) $publicClinicContext['logo_path'])) ?>" alt="<?= e((string) ($publicClinicContext['name'] ?? config('app.name'))) ?>" class="site-brand__logo">
                             <?php else: ?>
                                 <?= e($brandInitial) ?>
                             <?php endif; ?>
                         </span>
                         <div>
                             <p class="site-mobile-topbar__eyebrow">Clinic booking</p>
-                            <strong><?= e((string) $scopedClinic['name']) ?></strong>
-                            <p class="site-subheader__meta"><?= e((string) $scopedClinic['phone']) ?></p>
+                            <strong><?= e((string) ($publicClinicContext['name'] ?? config('app.name'))) ?></strong>
+                            <p class="site-subheader__meta"><?= e((string) ($publicClinicContext['phone'] ?? '')) ?></p>
                         </div>
                     </div>
                     <nav class="site-scoped-drawer__nav">
-                        <a href="<?= e(url('/')) ?>">Book appointment</a>
+                        <a href="<?= e(url($publicBookingHref)) ?>">Book appointment</a>
+                        <a href="<?= e(url($publicClinicHref)) ?>">Clinic home</a>
                         <a href="<?= e(url('/patient/dashboard')) ?>">My bookings</a>
                         <?php if ($phoneHref): ?>
                             <a href="<?= e($phoneHref) ?>">Call clinic</a>
@@ -103,7 +138,7 @@ $currentUserIdentity = $currentUser['email'] ?? $currentUser['phone'] ?? $curren
                     </nav>
                     <div class="site-scoped-drawer__footer">
                         <span>Build <?= e(config('app.build.version')) ?></span>
-                        <span><?= e((string) $scopedClinic['address']) ?></span>
+                        <span><?= e((string) ($publicClinicContext['address'] ?? '')) ?></span>
                     </div>
                 </aside>
             </div>
@@ -191,7 +226,7 @@ $currentUserIdentity = $currentUser['email'] ?? $currentUser['phone'] ?? $curren
             <?php endif; ?>
         <?php endif; ?>
 
-        <?php if (!$isScoped && $currentUser): ?>
+        <?php if (!$isScoped && !$isPatientFacingScoped && $currentUser): ?>
             <div class="site-subheader site-subheader--compact">
                 <p class="site-subheader__meta">Signed in as <?= e((string) $currentUserIdentity) ?></p>
                 <span class="site-pill">Build <?= e(config('app.build.version')) ?></span>
@@ -213,7 +248,7 @@ $currentUserIdentity = $currentUser['email'] ?? $currentUser['phone'] ?? $curren
     <footer class="site-footer">
         <div class="site-footer__inner">
             <p>
-                <?= e($isScoped ? (string) $scopedClinic['name'] : (string) config('app.name')) ?>
+                <?= e((string) $footerBrandName) ?>
                 · build <?= e(config('app.build.version')) ?>
                 <?php if ((string) config('app.build.commit') !== ''): ?>
                     · commit <?= e(config('app.build.commit')) ?>
@@ -225,7 +260,7 @@ $currentUserIdentity = $currentUser['email'] ?? $currentUser['phone'] ?? $curren
                 <?php else: ?>
                     mobile-first clinic booking by Huviena
                 <?php endif; ?>
-                <?php if ($isScoped): ?>
+                <?php if ($isScoped || $isPatientFacingScoped): ?>
                     · <a href="<?= e(url('/clinic/login')) ?>">admin login</a>
                 <?php else: ?>
                     · <a href="<?= e(url('/super-admin/login')) ?>">platform admin</a>

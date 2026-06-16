@@ -56,6 +56,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const selectedDateLabelSecondary = document.querySelector("[data-selected-date-label-secondary]");
     const selectedTimeLabel = document.querySelector("[data-selected-time-label]");
     const selectedSlotLabel = document.querySelector("[data-selected-slot-label]");
+    const dateStatus = document.querySelector("[data-date-status]");
     const authModal = document.querySelector("[data-auth-modal]");
     const authCloseButtons = Array.from(document.querySelectorAll("[data-auth-close]"));
     const authTabs = Array.from(document.querySelectorAll("[data-auth-tab]"));
@@ -79,6 +80,9 @@ document.addEventListener("DOMContentLoaded", () => {
     let selectedSlotText = "";
     let pendingSelection = null;
     let loadingAuth = false;
+    let activeSlotRequest = 0;
+    const searchWindowDays = 14;
+    const clinicPhoneHref = bookingExperience.dataset.clinicPhoneHref || "";
 
     const formatDateLabel = (value) => {
       if (!value) {
@@ -96,6 +100,36 @@ document.addEventListener("DOMContentLoaded", () => {
         day: "2-digit",
         month: "short"
       }).format(date);
+    };
+
+    const addDays = (value, offset) => {
+      const [year, month, day] = value.split("-").map(Number);
+      if (!year || !month || !day) {
+        return value;
+      }
+
+      const date = new Date(year, month - 1, day);
+      date.setDate(date.getDate() + offset);
+      const nextYear = date.getFullYear();
+      const nextMonth = String(date.getMonth() + 1).padStart(2, "0");
+      const nextDay = String(date.getDate()).padStart(2, "0");
+      return `${nextYear}-${nextMonth}-${nextDay}`;
+    };
+
+    const escapeHtml = (value) => String(value)
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#39;");
+
+    const setDateStatus = (message, tone = "neutral") => {
+      if (!dateStatus) {
+        return;
+      }
+
+      dateStatus.textContent = message;
+      dateStatus.dataset.tone = tone;
     };
 
     const setAuthMessage = (message, type = "info") => {
@@ -139,11 +173,11 @@ document.addEventListener("DOMContentLoaded", () => {
       });
 
       if (selectedTimeLabel) {
-        selectedTimeLabel.textContent = "Select time";
+        selectedTimeLabel.textContent = "Pick time";
       }
 
       if (selectedSlotLabel) {
-        selectedSlotLabel.textContent = "Tap a slot";
+        selectedSlotLabel.textContent = "Tap a time";
       }
     };
 
@@ -161,7 +195,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       bookingSubmitButton.type = "button";
       bookingSubmitButton.disabled = false;
-      bookingSubmitButton.textContent = pendingSelection ? "Continue to login" : "Select a slot to continue";
+      bookingSubmitButton.textContent = pendingSelection ? "Continue to login" : "Pick a time to continue";
     };
 
     const applySelectedSlot = (value, label) => {
@@ -289,56 +323,144 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     };
 
-    const renderSlots = async () => {
-      const doctorId = doctorSelect.value;
-      const date = dateInput.value;
+    const renderSlotFeedback = (message, tone = "info") => {
+      const phoneAction = clinicPhoneHref
+        ? `<a href="${escapeHtml(clinicPhoneHref)}" class="slot-feedback__link">Call clinic</a>`
+        : "";
 
-      slotContainer.innerHTML = '<p class="slot-feedback">Loading live slots...</p>';
-      pendingSelection = null;
-      clearSelection();
+      slotContainer.innerHTML = `
+        <div class="slot-feedback slot-feedback--${tone}">
+          <p>${escapeHtml(message)}</p>
+          ${phoneAction}
+        </div>
+      `;
+    };
 
-      if (!doctorId || !date) {
-        syncDateSelection();
-        updateBookingCta();
-        return;
-      }
+    const renderSlotButtons = (slots) => {
+      slotContainer.innerHTML = slots.map((slot) => {
+        const [startLabel, endLabel] = String(slot.label || "").split(" - ");
+        return `
+          <button type="button" data-slot-value="${escapeHtml(slot.start_time)}" data-slot-label="${escapeHtml(slot.label)}" class="slot-chip">
+            <strong class="slot-chip__time">${escapeHtml(startLabel || slot.label)}</strong>
+            <span class="slot-chip__range">${escapeHtml(endLabel || "Available")}</span>
+          </button>
+        `;
+      }).join("");
+    };
 
+    const fetchSlotsForDate = async (doctorId, date) => {
       try {
         const response = await fetch(`${baseUrl}/api/v1/doctors/${doctorId}/slots?date=${encodeURIComponent(date)}`, {
           headers: {
             Accept: "application/json"
           }
         });
-        const payload = await response.json();
+        const payload = await response.json().catch(() => null);
 
-        if (!response.ok || !payload.data) {
-          slotContainer.innerHTML = `<p class="slot-feedback slot-feedback--error">${payload.message || "No slots available."}</p>`;
-          updateBookingCta();
-          return;
+        if (!response.ok || !payload || !Array.isArray(payload.data)) {
+          return {
+            error: true,
+            message: payload?.message || "Unable to load slots right now.",
+            slots: []
+          };
         }
 
-        if (payload.data.length === 0) {
-          slotContainer.innerHTML = '<p class="slot-feedback">No open slots for that date.</p>';
-          updateBookingCta();
-          return;
-        }
-
-        slotContainer.innerHTML = payload.data.map((slot) => `
-          <button type="button" data-slot-value="${slot.start_time}" data-slot-label="${slot.label}" class="slot-chip">
-            ${slot.label}
-          </button>
-        `).join("");
-
-        if (selectedSlotValue) {
-          const selectedButton = slotContainer.querySelector(`[data-slot-value="${selectedSlotValue}"]`);
-          if (selectedButton) {
-            applySelectedSlot(selectedSlotValue, selectedSlotText);
-          }
-        }
+        return {
+          error: false,
+          message: "",
+          slots: payload.data
+        };
       } catch (error) {
-        slotContainer.innerHTML = '<p class="slot-feedback slot-feedback--error">Unable to load slots right now.</p>';
+        return {
+          error: true,
+          message: "Unable to load slots right now.",
+          slots: []
+        };
+      }
+    };
+
+    const findNextAvailableDate = async (doctorId, startDate, requestId) => {
+      for (let offset = 1; offset < searchWindowDays; offset += 1) {
+        if (requestId !== activeSlotRequest) {
+          return null;
+        }
+
+        const candidate = addDays(startDate, offset);
+        const result = await fetchSlotsForDate(doctorId, candidate);
+
+        if (requestId !== activeSlotRequest) {
+          return null;
+        }
+
+        if (!result.error && result.slots.length > 0) {
+          return {
+            date: candidate,
+            slots: result.slots
+          };
+        }
       }
 
+      return null;
+    };
+
+    const renderSlots = async ({ allowAutoAdvance = false } = {}) => {
+      const doctorId = doctorSelect.value;
+      const date = dateInput.value;
+      const requestId = activeSlotRequest + 1;
+      activeSlotRequest = requestId;
+
+      slotContainer.innerHTML = '<div class="slot-feedback"><p>Loading live slots...</p></div>';
+      pendingSelection = null;
+      clearSelection();
+
+      if (!doctorId || !date) {
+        syncDateSelection();
+        setDateStatus("Choose a day", "neutral");
+        updateBookingCta();
+        return;
+      }
+
+      setDateStatus("Checking availability", "neutral");
+
+      const result = await fetchSlotsForDate(doctorId, date);
+      if (requestId !== activeSlotRequest) {
+        return;
+      }
+
+      if (result.error) {
+        renderSlotFeedback(result.message, "error");
+        setDateStatus("Unable to load slots", "error");
+        updateBookingCta();
+        return;
+      }
+
+      if (result.slots.length === 0 && allowAutoAdvance) {
+        setDateStatus("Finding the next open day", "neutral");
+        const fallback = await findNextAvailableDate(doctorId, date, requestId);
+
+        if (requestId !== activeSlotRequest) {
+          return;
+        }
+
+        if (fallback) {
+          dateInput.value = fallback.date;
+          syncDateSelection();
+          renderSlotButtons(fallback.slots);
+          setDateStatus(`Next open day: ${formatDateLabel(fallback.date)}`, "success");
+          updateBookingCta();
+          return;
+        }
+      }
+
+      if (result.slots.length === 0) {
+        renderSlotFeedback(`No open slots on ${formatDateLabel(date)}. Try another day${clinicPhoneHref ? " or call the clinic." : "."}`);
+        setDateStatus("No slots on selected day", "warning");
+        updateBookingCta();
+        return;
+      }
+
+      renderSlotButtons(result.slots);
+      setDateStatus(`Open on ${formatDateLabel(dateInput.value)}`, "success");
       updateBookingCta();
     };
 
@@ -381,7 +503,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (!slotInput.value) {
           event.preventDefault();
           if (selectedSlotLabel) {
-            selectedSlotLabel.textContent = "Choose a slot first";
+            selectedSlotLabel.textContent = "Choose a time first";
           }
           slotContainer.scrollIntoView({ behavior: "smooth", block: "center" });
         }
@@ -397,7 +519,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       if (!pendingSelection && !selectedSlotValue) {
         if (selectedSlotLabel) {
-          selectedSlotLabel.textContent = "Choose a slot first";
+          selectedSlotLabel.textContent = "Choose a time first";
         }
         slotContainer.scrollIntoView({ behavior: "smooth", block: "center" });
         return;
@@ -525,7 +647,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     syncDateSelection();
     updateBookingCta();
-    renderSlots();
+    renderSlots({ allowAutoAdvance: true });
   };
 
   const initStandaloneGoogleForm = () => {

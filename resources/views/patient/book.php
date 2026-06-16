@@ -3,7 +3,7 @@
 use App\Core\Auth;
 
 $quickDates = [];
-for ($offset = 0; $offset < 5; $offset++) {
+for ($offset = 0; $offset < 7; $offset++) {
     $timestamp = strtotime('+' . $offset . ' day');
     $quickDates[] = [
         'value' => date('Y-m-d', $timestamp),
@@ -18,12 +18,18 @@ $googleClientId = trim((string) config('services.google.client_id', ''));
 $smsConfigured = trim((string) config('services.sms.gateway_url', '')) !== '';
 $patient = Auth::check('patient') ? Auth::user() : null;
 $patientDisplayName = $patient ? trim((string) (($patient['first_name'] ?? '') . ' ' . ($patient['last_name'] ?? ''))) : '';
+$clinicName = $scopedClinic['name'] ?? $doctor['clinic_name'];
+$clinicPhoneHref = !empty($doctor['clinic_phone'])
+    ? 'tel:' . preg_replace('/[^0-9+]/', '', (string) $doctor['clinic_phone'])
+    : (!empty($scopedClinic['phone']) ? 'tel:' . preg_replace('/[^0-9+]/', '', (string) $scopedClinic['phone']) : '');
 ?>
 <section
     class="booking-surface"
     data-booking-experience
     data-patient-logged-in="<?= $patientLoggedIn ? '1' : '0' ?>"
     data-booking-redirect-to="<?= e((string) $returnTarget) ?>"
+    data-clinic-name="<?= e((string) $clinicName) ?>"
+    data-clinic-phone-href="<?= e((string) $clinicPhoneHref) ?>"
 >
     <div class="booking-surface__hero">
         <div class="booking-surface__identity">
@@ -35,15 +41,16 @@ $patientDisplayName = $patient ? trim((string) (($patient['first_name'] ?? '') .
                 <?php endif; ?>
             </div>
             <div class="booking-surface__copy">
-                <p class="section-kicker"><?= e($scopedClinic['name'] ?? $doctor['clinic_name']) ?></p>
+                <p class="section-kicker"><?= e($clinicName) ?></p>
                 <h1><?= e($doctor['name']) ?></h1>
-                <p><?= e($doctor['specialization']) ?> · INR <?= e(number_format((float) $doctor['consultation_fee'], 2)) ?> consultation · <?= e((string) $doctor['slot_duration_minutes']) ?> min slots</p>
+                <div class="booking-surface__meta">
+                    <span><?= e($doctor['specialization']) ?></span>
+                    <span>INR <?= e(number_format((float) $doctor['consultation_fee'], 2)) ?></span>
+                    <span><?= e((string) $doctor['slot_duration_minutes']) ?> min slot</span>
+                </div>
             </div>
         </div>
-        <div class="booking-surface__helper">
-            <span class="section-badge">Pick a slot first</span>
-            <p>Tap any available time. Login opens only after you choose a slot, and then you return straight back to the same booking state.</p>
-        </div>
+        <p class="booking-surface__caption">Pick a day, tap a time, and login only when you are ready to reserve it.</p>
     </div>
 
     <form method="post" action="<?= e(url('/doctors/' . $doctor['id'] . '/book')) ?>" class="booking-surface__form" data-booking-form>
@@ -57,7 +64,10 @@ $patientDisplayName = $patient ? trim((string) (($patient['first_name'] ?? '') .
                     <p class="section-kicker">Select date</p>
                     <h2>Choose a day</h2>
                 </div>
-                <span class="section-badge section-badge--soft" data-selected-date-label><?= e(date('D, d M', strtotime($quickDates[0]['value']))) ?></span>
+                <div class="booking-surface__section-badges">
+                    <span class="section-badge section-badge--soft" data-selected-date-label><?= e(date('D, d M', strtotime($quickDates[0]['value']))) ?></span>
+                    <span class="section-badge" data-date-status>Checking nearby slots</span>
+                </div>
             </div>
 
             <div class="quick-date-grid booking-surface__dates">
@@ -74,7 +84,7 @@ $patientDisplayName = $patient ? trim((string) (($patient['first_name'] ?? '') .
             </div>
 
             <div class="booking-surface__calendar-input">
-                <label for="appointment_date">Or choose another date</label>
+                <label for="appointment_date">Other day</label>
                 <input
                     id="appointment_date"
                     type="date"
@@ -93,32 +103,32 @@ $patientDisplayName = $patient ? trim((string) (($patient['first_name'] ?? '') .
                     <p class="section-kicker">Select time</p>
                     <h2>Available slots</h2>
                 </div>
-                <span class="section-badge" data-selected-slot-label>Tap a slot</span>
+                <span class="section-badge" data-selected-slot-label>Tap a time</span>
             </div>
 
             <div data-slot-results class="slot-grid slot-grid--booking"></div>
         </div>
 
         <div class="booking-surface__panel booking-surface__panel--soft">
-            <div class="booking-surface__section-head">
-                <div>
-                    <p class="section-kicker">Optional</p>
-                    <h2>Notes for clinic</h2>
+            <details class="booking-surface__details">
+                <summary>
+                    <span>Optional note for clinic</span>
+                    <?php if ($patientLoggedIn && $patientDisplayName !== ''): ?>
+                        <span class="section-badge section-badge--soft">Signed in as <?= e($patientDisplayName) ?></span>
+                    <?php else: ?>
+                        <span class="section-badge section-badge--soft">Login after slot pick</span>
+                    <?php endif; ?>
+                </summary>
+                <div class="booking-surface__details-body">
+                    <textarea id="notes" name="notes" rows="3" class="booking-surface__notes" placeholder="Symptoms, reason for visit, or anything the clinic should know"></textarea>
                 </div>
-                <?php if ($patientLoggedIn && $patientDisplayName !== ''): ?>
-                    <span class="section-badge section-badge--soft">Signed in as <?= e($patientDisplayName) ?></span>
-                <?php else: ?>
-                    <span class="section-badge section-badge--soft">Login after slot selection</span>
-                <?php endif; ?>
-            </div>
-
-            <textarea id="notes" name="notes" rows="4" class="booking-surface__notes" placeholder="Symptoms, reason for visit, or anything the clinic should know"></textarea>
+            </details>
         </div>
 
         <div class="booking-sticky-bar booking-sticky-bar--sheet">
             <div class="booking-sticky-bar__summary">
                 <span data-selected-date-label-secondary><?= e(date('D, d M', strtotime($quickDates[0]['value']))) ?></span>
-                <strong data-selected-time-label>Select time</strong>
+                <strong data-selected-time-label>Pick time</strong>
             </div>
             <button
                 class="btn-primary booking-sticky-bar__button"
