@@ -172,6 +172,24 @@ document.addEventListener("DOMContentLoaded", () => {
       if (selectedDateLabelSecondary) {
         selectedDateLabelSecondary.textContent = label;
       }
+
+      updateDatePagerState();
+    };
+
+    const updateDatePagerState = () => {
+      if (!dateStrip || dateScrollButtons.length === 0) {
+        return;
+      }
+
+      const canScroll = dateStrip.scrollWidth > dateStrip.clientWidth + 4;
+      const atStart = dateStrip.scrollLeft <= 4;
+      const atEnd = dateStrip.scrollLeft + dateStrip.clientWidth >= dateStrip.scrollWidth - 4;
+
+      dateScrollButtons.forEach((button) => {
+        const isPrev = button.dataset.dateScroll === "prev";
+        button.hidden = !canScroll;
+        button.disabled = canScroll ? (isPrev ? atStart : atEnd) : true;
+      });
     };
 
     const clearSelection = () => {
@@ -670,6 +688,12 @@ document.addEventListener("DOMContentLoaded", () => {
         });
       });
     });
+
+    if (dateStrip) {
+      dateStrip.addEventListener("scroll", updateDatePagerState, { passive: true });
+      window.addEventListener("resize", updateDatePagerState);
+      requestAnimationFrame(updateDatePagerState);
+    }
 
     syncDateSelection();
     updateBookingCta();

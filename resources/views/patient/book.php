@@ -73,8 +73,8 @@ $clinicPhoneHref = !empty($doctor['clinic_phone'])
 
             <div class="booking-date-pager">
                 <button type="button" class="booking-date-pager__nav" data-date-scroll="prev" aria-label="Show earlier dates">‹</button>
-                <div class="booking-date-pager__viewport" data-date-strip>
-                    <div class="quick-date-grid booking-surface__dates">
+                <div class="booking-date-pager__viewport">
+                    <div class="quick-date-grid booking-surface__dates" data-date-strip>
                         <?php foreach ($quickDates as $index => $quickDate): ?>
                             <button
                                 type="button"

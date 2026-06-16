@@ -85,12 +85,11 @@ $currentUserIdentity = $currentUser['email'] ?? $currentUser['phone'] ?? $curren
                     aria-controls="siteScopedDrawer"
                     aria-label="Open navigation menu"
                 >
-                    <span class="site-mobile-topbar__menu-icon" aria-hidden="true">
+                    <span class="site-mobile-topbar__menu-bars" aria-hidden="true">
                         <span></span>
                         <span></span>
                         <span></span>
                     </span>
-                    <span class="site-mobile-topbar__menu-label">Menu</span>
                 </button>
                 <a href="<?= e(url($publicClinicHref)) ?>" class="site-mobile-topbar__brand">
                     <span class="site-mobile-topbar__eyebrow">Clinic booking</span>

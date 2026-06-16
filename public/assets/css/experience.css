@@ -138,14 +138,14 @@ body.is-patient-surface .site-header-shell{
 }
 
 .site-mobile-topbar{
-  display:flex;
+  display:grid;
+  grid-template-columns:44px minmax(0,1fr) auto;
   align-items:center;
-  justify-content:space-between;
-  gap:12px;
-  padding:10px 12px;
+  gap:10px;
+  padding:10px;
   border:1px solid rgba(255,255,255,.82);
-  border-radius:22px;
-  background:rgba(255,255,255,.92);
+  border-radius:18px;
+  background:rgba(255,255,255,.96);
   backdrop-filter:blur(18px);
   box-shadow:var(--shadow);
   position:sticky;
@@ -154,35 +154,28 @@ body.is-patient-surface .site-header-shell{
 }
 
 .site-mobile-topbar__menu{
-  display:inline-flex;
-  align-items:center;
-  gap:10px;
-  flex-shrink:0;
-  width:auto;
-  height:40px;
-  padding:0 12px;
+  display:grid;
+  place-items:center;
+  width:44px;
+  height:44px;
+  padding:0;
   border-radius:14px;
   border:1px solid var(--line);
   background:#fff;
+  box-shadow:0 14px 28px -24px rgba(40,100,220,.42);
 }
 
-.site-mobile-topbar__menu-icon{
+.site-mobile-topbar__menu-bars{
   display:grid;
   gap:4px;
 }
 
-.site-mobile-topbar__menu-icon span{
+.site-mobile-topbar__menu-bars span{
   display:block;
-  width:18px;
+  width:16px;
   height:2px;
   border-radius:999px;
   background:#27405e;
-}
-
-.site-mobile-topbar__menu-label{
-  font-size:.8rem;
-  font-weight:800;
-  color:#27405e;
 }
 
 .site-mobile-topbar__brand{
@@ -190,14 +183,16 @@ body.is-patient-surface .site-header-shell{
   flex-direction:column;
   min-width:0;
   flex:1 1 auto;
+  gap:2px;
 }
 
 .site-mobile-topbar__eyebrow{
-  font-size:.62rem;
+  font-size:.58rem;
   font-weight:800;
   text-transform:uppercase;
-  letter-spacing:.18em;
+  letter-spacing:.14em;
   color:#7a8eaf;
+  line-height:1.1;
 }
 
 .site-mobile-topbar__brand strong{
@@ -205,7 +200,8 @@ body.is-patient-surface .site-header-shell{
   white-space:nowrap;
   overflow:hidden;
   text-overflow:ellipsis;
-  font-size:.96rem;
+  font-size:1rem;
+  line-height:1.15;
   color:var(--ink);
 }
 
@@ -213,12 +209,12 @@ body.is-patient-surface .site-header-shell{
   display:inline-flex;
   align-items:center;
   justify-content:center;
-  min-height:36px;
-  padding:0 12px;
+  min-height:34px;
+  padding:0 11px;
   border-radius:999px;
   background:#edf4ff;
   color:var(--brand-deep);
-  font-size:.8rem;
+  font-size:.78rem;
   font-weight:800;
   flex-shrink:0;
 }
@@ -1047,10 +1043,10 @@ body.is-patient-surface .site-main{
 }
 
 .booking-surface__section-copy{
-  margin-top:6px;
+  margin-top:4px;
   color:var(--muted);
-  font-size:.84rem;
-  line-height:1.5;
+  font-size:.8rem;
+  line-height:1.45;
 }
 
 .booking-surface__section-badges{
@@ -1068,6 +1064,7 @@ body.is-patient-surface .site-main{
 }
 
 .booking-date-pager__viewport{
+  min-width:0;
   overflow:hidden;
 }
 
@@ -1086,16 +1083,18 @@ body.is-patient-surface .site-main{
   box-shadow:0 10px 22px -18px rgba(40,100,220,.4);
 }
 
-.booking-surface__dates{
+.quick-date-grid.booking-surface__dates{
   display:flex;
+  flex-wrap:nowrap;
   gap:8px;
   overflow-x:auto;
-  padding:2px 2px 6px;
+  padding:2px 2px 4px;
   scrollbar-width:none;
   scroll-snap-type:x proximity;
+  grid-template-columns:none;
 }
 
-.booking-surface__dates::-webkit-scrollbar{
+.quick-date-grid.booking-surface__dates::-webkit-scrollbar{
   display:none;
 }
 
@@ -1300,12 +1299,19 @@ body.is-patient-surface .site-main{
 
 .quick-date-pill{
   flex-direction:column;
-  flex:0 0 88px;
-  scroll-snap-align:start;
+  flex:0 0 76px;
+  min-height:72px;
+  padding:10px 6px;
+  border-radius:14px;
+  scroll-snap-align:center;
 }
 
 .quick-date-pill strong{
-  font-size:.9rem;
+  font-size:.78rem;
+}
+
+.quick-date-pill span{
+  font-size:.72rem;
 }
 
 .quick-date-pill.is-active,
@@ -1628,7 +1634,8 @@ body.is-patient-surface .site-main{
 
 @media (min-width:768px){
   .site-mobile-topbar{
-    padding:16px 18px;
+    grid-template-columns:48px minmax(0,1fr) auto;
+    padding:12px 14px;
   }
 
   .booking-surface__hero{
@@ -1720,6 +1727,10 @@ body.is-patient-surface .site-main{
 
   .booking-surface__calendar-input{
     grid-template-columns:minmax(0,1fr);
+  }
+
+  .site-mobile-topbar__eyebrow{
+    display:none;
   }
 
   .slot-grid--booking{
