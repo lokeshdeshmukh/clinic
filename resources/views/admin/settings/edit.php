@@ -1,7 +1,8 @@
 <div class="mx-auto max-w-3xl panel">
     <div class="mb-6">
-        <p class="text-sm uppercase tracking-[0.22em] text-slate-500">Clinic profile</p>
-        <h1 class="text-3xl font-semibold">Settings</h1>
+        <p class="text-sm uppercase tracking-[0.22em] text-slate-500">Clinic settings</p>
+        <h1 class="text-3xl font-semibold">Clinic profile and timings</h1>
+        <p class="mt-2 text-sm text-slate-500">Update clinic details, reminder preferences, and weekly doctor hours from one place.</p>
     </div>
     <form method="post" action="<?= e(url('/admin/settings')) ?>" enctype="multipart/form-data" class="grid gap-4">
         <?= csrf_field() ?>
@@ -49,11 +50,11 @@
 <div class="mx-auto mt-6 max-w-5xl panel">
     <div class="mb-6 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
         <div>
-            <p class="text-sm uppercase tracking-[0.22em] text-slate-500">Doctor hours</p>
-            <h2 class="text-2xl font-semibold">Weekly availability controls</h2>
-            <p class="mt-2 max-w-3xl text-sm text-slate-500">These weekly hours directly control which slots patients can see when booking. Use the separate availability module for holidays, blocked slots, and one-off date overrides.</p>
+            <p class="text-sm uppercase tracking-[0.22em] text-slate-500">Clinic timings</p>
+            <h2 class="text-2xl font-semibold">Weekly doctor hours</h2>
+            <p class="mt-2 max-w-3xl text-sm text-slate-500">These weekly hours directly control which slots patients can see when booking. Use the detailed schedule page for holidays, blocked slots, and one-off date overrides.</p>
         </div>
-        <a class="btn-secondary" href="<?= e(url('/admin/availability')) ?>">Open detailed availability</a>
+        <a class="btn-secondary" href="<?= e(url('/admin/availability')) ?>">Open detailed schedule</a>
     </div>
 
     <div class="grid gap-6 xl:grid-cols-[0.88fr_1.12fr]">

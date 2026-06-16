@@ -58,6 +58,10 @@ body.is-patient-surface .site-header-shell{
   padding-top:12px;
 }
 
+body.is-admin-surface .site-header-shell{
+  padding-top:12px;
+}
+
 .site-header{
   display:flex;
   align-items:center;
@@ -306,6 +310,13 @@ body.is-patient-surface .site-header-shell{
   font-size:.92rem;
   font-weight:700;
   text-align:left;
+}
+
+.site-scoped-drawer__nav a[aria-current="page"]{
+  background:linear-gradient(135deg,var(--brand),var(--brand-deep));
+  border-color:transparent;
+  color:#fff;
+  box-shadow:0 18px 32px -24px rgba(40,100,220,.68);
 }
 
 .site-scoped-drawer__footer{

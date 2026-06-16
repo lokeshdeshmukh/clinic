@@ -4,17 +4,22 @@ $bookingValues = array_map(static fn (array $row): int => (int) $row['total'], $
 $revenueLabels = array_map(static fn (array $row): string => $row['period'], $dashboard['revenue_series']);
 $revenueValues = array_map(static fn (array $row): float => (float) $row['total'], $dashboard['revenue_series']);
 ?>
-<div class="mb-6 flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
-    <div>
-        <p class="text-sm uppercase tracking-[0.22em] text-brand-700">Admin dashboard</p>
-        <h1 class="mt-2 text-3xl font-semibold"><?= e($clinic['name']) ?></h1>
-        <p class="mt-2 text-sm text-slate-600">Monitor appointments, doctors, patients, analytics, and revenue in one place.</p>
+<section class="panel mb-6">
+    <div class="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+        <div>
+            <p class="text-sm uppercase tracking-[0.22em] text-brand-700">Admin dashboard</p>
+            <h1 class="mt-2 text-3xl font-semibold"><?= e($clinic['name']) ?></h1>
+            <p class="mt-2 text-sm text-slate-600">Monitor bookings, update clinic timings, and control which doctor slots patients can see.</p>
+        </div>
     </div>
-    <div class="flex flex-wrap gap-3">
+    <div class="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <a href="<?= e(url('/admin/doctors/create')) ?>" class="btn-primary">Add doctor</a>
         <a href="<?= e(url('/admin/appointments')) ?>" class="btn-secondary">Manage appointments</a>
+        <a href="<?= e(url('/admin/settings')) ?>" class="btn-secondary">Clinic timings</a>
+        <a href="<?= e(url('/admin/availability')) ?>" class="btn-secondary">Doctor schedule</a>
     </div>
-</div>
+    <p class="mt-4 text-sm text-slate-500">Patients only see slots that fall inside the weekly hours, blocked slots, holidays, and date overrides you configure here.</p>
+</section>
 
 <section class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
     <div class="metric-card">

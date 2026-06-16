@@ -1,7 +1,13 @@
 <section class="grid gap-6 xl:grid-cols-[0.9fr_1.1fr]">
     <div class="panel">
-        <p class="text-sm uppercase tracking-[0.22em] text-slate-500">Availability rules</p>
-        <h1 class="mt-2 text-3xl font-semibold">Set doctor availability</h1>
+        <div class="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+            <div>
+                <p class="text-sm uppercase tracking-[0.22em] text-slate-500">Doctor schedule</p>
+                <h1 class="mt-2 text-3xl font-semibold">Overrides, holidays, and blocked slots</h1>
+                <p class="mt-2 text-sm text-slate-500">Use this page for one-off schedule changes after you set the weekly doctor hours inside clinic timings.</p>
+            </div>
+            <a class="btn-secondary" href="<?= e(url('/admin/settings')) ?>">Open clinic timings</a>
+        </div>
         <form method="post" action="<?= e(url('/admin/availability')) ?>" class="mt-6 grid gap-4">
             <?= csrf_field() ?>
             <div>

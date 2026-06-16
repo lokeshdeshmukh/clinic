@@ -10,10 +10,21 @@ $flashError = Session::getFlash('error');
 $scopedClinic = current_clinic();
 $isScoped = $scopedClinic !== null;
 $requestPath = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/';
+$isClinicAdminSurface = $guard === 'clinic' && str_starts_with($requestPath, '/admin');
 $isManagementSurface = str_starts_with($requestPath, '/admin')
     || str_starts_with($requestPath, '/super-admin')
     || str_starts_with($requestPath, '/clinic/');
 $publicClinicContext = $scopedClinic;
+if ($publicClinicContext === null && $guard === 'clinic' && is_array($currentUser)) {
+    $publicClinicContext = [
+        'name' => $currentUser['name'] ?? config('app.name'),
+        'slug' => $currentUser['slug'] ?? '',
+        'phone' => $currentUser['phone'] ?? '',
+        'address' => $currentUser['address'] ?? '',
+        'email' => $currentUser['email'] ?? '',
+        'logo_path' => $currentUser['logo_path'] ?? null,
+    ];
+}
 if ($publicClinicContext === null && isset($clinic) && is_array($clinic)) {
     $publicClinicContext = [
         'name' => $clinic['name'] ?? config('app.name'),
@@ -63,6 +74,51 @@ $brandInitial = $publicClinicContext !== null
     ? strtoupper(substr((string) $publicClinicContext['name'], 0, 1))
     : 'H';
 $currentUserIdentity = $currentUser['email'] ?? $currentUser['phone'] ?? $currentUser['name'] ?? '';
+$adminClinicName = (string) ($currentUser['name'] ?? ($publicClinicContext['name'] ?? config('app.name')));
+$adminActionHref = '/admin/settings';
+$adminActionLabel = 'Timings';
+if (str_starts_with($requestPath, '/admin/settings')) {
+    $adminActionHref = '/admin/availability';
+    $adminActionLabel = 'Schedule';
+} elseif (str_starts_with($requestPath, '/admin/availability')) {
+    $adminActionHref = '/admin/settings';
+    $adminActionLabel = 'Settings';
+} elseif (str_starts_with($requestPath, '/admin/reports')) {
+    $adminActionHref = '/admin/dashboard';
+    $adminActionLabel = 'Dashboard';
+}
+$adminNavItems = [
+    [
+        'label' => 'Dashboard',
+        'href' => '/admin/dashboard',
+        'active' => $requestPath === '/admin/dashboard',
+    ],
+    [
+        'label' => 'Doctors',
+        'href' => '/admin/doctors',
+        'active' => str_starts_with($requestPath, '/admin/doctors'),
+    ],
+    [
+        'label' => 'Appointments',
+        'href' => '/admin/appointments',
+        'active' => str_starts_with($requestPath, '/admin/appointments'),
+    ],
+    [
+        'label' => 'Clinic timings',
+        'href' => '/admin/settings',
+        'active' => str_starts_with($requestPath, '/admin/settings'),
+    ],
+    [
+        'label' => 'Doctor schedule',
+        'href' => '/admin/availability',
+        'active' => str_starts_with($requestPath, '/admin/availability'),
+    ],
+    [
+        'label' => 'Reports',
+        'href' => '/admin/reports',
+        'active' => str_starts_with($requestPath, '/admin/reports'),
+    ],
+];
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -80,7 +136,7 @@ $currentUserIdentity = $currentUser['email'] ?? $currentUser['phone'] ?? $curren
     <script defer src="https://cdn.jsdelivr.net/npm/chart.js@4.4.6/dist/chart.umd.min.js"></script>
     <script defer src="<?= e(asset('js/app.js')) ?>"></script>
 </head>
-<body class="site-body<?= $isScoped ? ' is-clinic-scoped' : '' ?><?= $isPatientFacingScoped ? ' is-patient-surface' : '' ?>" data-base-url="<?= e(url('')) ?>">
+<body class="site-body<?= $isScoped ? ' is-clinic-scoped' : '' ?><?= $isPatientFacingScoped ? ' is-patient-surface' : '' ?><?= $isClinicAdminSurface ? ' is-admin-surface' : '' ?>" data-base-url="<?= e(url('')) ?>">
     <div class="site-backdrop"></div>
     <header class="site-header-shell">
         <?php if ($isPatientFacingScoped): ?>
@@ -157,6 +213,83 @@ $currentUserIdentity = $currentUser['email'] ?? $currentUser['phone'] ?? $curren
                     <div class="site-scoped-drawer__footer">
                         <span>Build <?= e(config('app.build.version')) ?></span>
                         <span><?= e((string) ($publicClinicContext['address'] ?? '')) ?></span>
+                    </div>
+                </aside>
+            </div>
+        <?php elseif ($isClinicAdminSurface): ?>
+            <div class="site-mobile-topbar">
+                <button
+                    type="button"
+                    class="site-mobile-topbar__menu"
+                    data-drawer-toggle
+                    aria-expanded="false"
+                    aria-controls="siteScopedDrawer"
+                    aria-label="Open admin menu"
+                >
+                    <span class="site-mobile-topbar__menu-bars" aria-hidden="true">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </span>
+                </button>
+                <a href="<?= e(url('/admin/dashboard')) ?>" class="site-mobile-topbar__brand">
+                    <span class="site-mobile-topbar__eyebrow">Clinic admin</span>
+                    <strong><?= e($adminClinicName) ?></strong>
+                </a>
+                <a href="<?= e(url($adminActionHref)) ?>" class="site-mobile-topbar__action"><?= e($adminActionLabel) ?></a>
+            </div>
+
+            <div class="site-scoped-drawer" id="siteScopedDrawer" data-drawer hidden>
+                <button type="button" class="site-scoped-drawer__backdrop" data-drawer-close aria-label="Close admin menu"></button>
+                <aside class="site-scoped-drawer__panel">
+                    <div class="site-scoped-drawer__head">
+                        <span class="site-brand__mark site-brand__mark--drawer">
+                            <?php if (!empty($publicClinicContext['logo_path'])): ?>
+                                <img src="<?= e(url((string) $publicClinicContext['logo_path'])) ?>" alt="<?= e($adminClinicName) ?>" class="site-brand__logo">
+                            <?php else: ?>
+                                <?= e($brandInitial) ?>
+                            <?php endif; ?>
+                        </span>
+                        <div>
+                            <p class="site-mobile-topbar__eyebrow">Clinic admin</p>
+                            <strong><?= e($adminClinicName) ?></strong>
+                            <div class="site-scoped-drawer__contact">
+                                <p class="site-subheader__meta"><?= e((string) ($publicClinicContext['phone'] ?? '')) ?></p>
+                                <?php if ($phoneHref): ?>
+                                    <a href="<?= e($phoneHref) ?>" class="site-scoped-drawer__phone-link" aria-label="Call clinic">
+                                        <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                                            <path d="M5.3 3.8h2.1l1 3.1-1.3 1.3a11.2 11.2 0 0 0 4.7 4.7l1.3-1.3 3.1 1v2.1a1.5 1.5 0 0 1-1.6 1.5A12.9 12.9 0 0 1 3.8 5.4 1.5 1.5 0 0 1 5.3 3.8Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                        </svg>
+                                    </a>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                    </div>
+                    <nav class="site-scoped-drawer__nav">
+                        <?php foreach ($adminNavItems as $item): ?>
+                            <a
+                                href="<?= e(url($item['href'])) ?>"
+                                <?php if ($item['active']): ?>aria-current="page"<?php endif; ?>
+                            >
+                                <?= e($item['label']) ?>
+                            </a>
+                        <?php endforeach; ?>
+                        <?php if ($publicClinicHref !== '/'): ?>
+                            <a href="<?= e(url($publicBookingHref)) ?>">Open booking page</a>
+                        <?php endif; ?>
+                        <form method="post" action="<?= e(url('/clinic/logout')) ?>">
+                            <?= csrf_field() ?>
+                            <button type="submit">Logout</button>
+                        </form>
+                    </nav>
+                    <div class="site-scoped-drawer__footer">
+                        <span>Build <?= e(config('app.build.version')) ?></span>
+                        <?php if ($currentUserIdentity !== ''): ?>
+                            <span><?= e((string) $currentUserIdentity) ?></span>
+                        <?php endif; ?>
+                        <?php if (!empty($publicClinicContext['address'])): ?>
+                            <span><?= e((string) $publicClinicContext['address']) ?></span>
+                        <?php endif; ?>
                     </div>
                 </aside>
             </div>
@@ -244,7 +377,7 @@ $currentUserIdentity = $currentUser['email'] ?? $currentUser['phone'] ?? $curren
             <?php endif; ?>
         <?php endif; ?>
 
-        <?php if (!$isScoped && !$isPatientFacingScoped && $currentUser): ?>
+        <?php if (!$isScoped && !$isPatientFacingScoped && !$isClinicAdminSurface && $currentUser): ?>
             <div class="site-subheader site-subheader--compact">
                 <p class="site-subheader__meta">Signed in as <?= e((string) $currentUserIdentity) ?></p>
                 <span class="site-pill">Build <?= e(config('app.build.version')) ?></span>
