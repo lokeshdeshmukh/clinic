@@ -258,6 +258,31 @@ body.is-patient-surface .site-header-shell{
   gap:14px;
 }
 
+.site-scoped-drawer__contact{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  margin-top:4px;
+}
+
+.site-scoped-drawer__phone-link{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  width:28px;
+  height:28px;
+  border-radius:999px;
+  border:1px solid var(--line);
+  background:#edf4ff;
+  color:var(--brand-deep);
+  flex-shrink:0;
+}
+
+.site-scoped-drawer__phone-link svg{
+  width:14px;
+  height:14px;
+}
+
 .site-scoped-drawer__nav{
   display:grid;
   gap:8px;

@@ -42,10 +42,18 @@ $isPatientFacingScoped = !$isManagementSurface
 $phoneHref = $publicClinicContext !== null && !empty($publicClinicContext['phone'])
     ? 'tel:' . preg_replace('/[^0-9+]/', '', (string) $publicClinicContext['phone'])
     : null;
+$clinicDoctorCount = 0;
+if (isset($doctors) && is_array($doctors)) {
+    $clinicDoctorCount = count($doctors);
+} elseif (isset($doctor) && is_array($doctor) && isset($doctor['clinic_doctors_count'])) {
+    $clinicDoctorCount = (int) $doctor['clinic_doctors_count'];
+}
 $publicClinicHref = '/';
 if (!$isScoped && $publicClinicContext !== null && !empty($publicClinicContext['slug'])) {
     $publicClinicHref = '/clinics/' . $publicClinicContext['slug'];
 }
+$clinicHomeHref = $publicClinicHref !== '/' ? $publicClinicHref . '#clinic-doctors' : $publicClinicHref;
+$showClinicHomeLink = $clinicDoctorCount > 1 && $publicClinicHref !== '/';
 $publicBookingHref = $publicClinicHref;
 if (isset($doctor) && is_array($doctor) && !empty($doctor['id'])) {
     $publicBookingHref = '/doctors/' . $doctor['id'] . '/book';
@@ -118,17 +126,25 @@ $currentUserIdentity = $currentUser['email'] ?? $currentUser['phone'] ?? $curren
                         <div>
                             <p class="site-mobile-topbar__eyebrow">Clinic booking</p>
                             <strong><?= e((string) ($publicClinicContext['name'] ?? config('app.name'))) ?></strong>
-                            <p class="site-subheader__meta"><?= e((string) ($publicClinicContext['phone'] ?? '')) ?></p>
+                            <div class="site-scoped-drawer__contact">
+                                <p class="site-subheader__meta"><?= e((string) ($publicClinicContext['phone'] ?? '')) ?></p>
+                                <?php if ($phoneHref): ?>
+                                    <a href="<?= e($phoneHref) ?>" class="site-scoped-drawer__phone-link" aria-label="Call clinic">
+                                        <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                                            <path d="M5.3 3.8h2.1l1 3.1-1.3 1.3a11.2 11.2 0 0 0 4.7 4.7l1.3-1.3 3.1 1v2.1a1.5 1.5 0 0 1-1.6 1.5A12.9 12.9 0 0 1 3.8 5.4 1.5 1.5 0 0 1 5.3 3.8Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                        </svg>
+                                    </a>
+                                <?php endif; ?>
+                            </div>
                         </div>
                     </div>
                     <nav class="site-scoped-drawer__nav">
                         <a href="<?= e(url($publicBookingHref)) ?>">Book appointment</a>
-                        <a href="<?= e(url($publicClinicHref)) ?>">Clinic home</a>
-                        <a href="<?= e(url('/patient/dashboard')) ?>">My bookings</a>
-                        <?php if ($phoneHref): ?>
-                            <a href="<?= e($phoneHref) ?>">Call clinic</a>
+                        <?php if ($showClinicHomeLink): ?>
+                            <a href="<?= e(url($clinicHomeHref)) ?>">Clinic home</a>
                         <?php endif; ?>
                         <?php if ($guard === 'patient'): ?>
+                            <a href="<?= e(url('/patient/dashboard')) ?>">My bookings</a>
                             <form method="post" action="<?= e(url('/patient/logout')) ?>">
                                 <?= csrf_field() ?>
                                 <button type="submit">Logout</button>
