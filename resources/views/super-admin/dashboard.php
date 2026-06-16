@@ -1,11 +1,29 @@
 <section class="grid gap-6">
     <div class="panel">
         <p class="text-sm uppercase tracking-[0.22em] text-slate-500">Platform dashboard</p>
-        <h1 class="mt-2 text-3xl font-semibold">Create and manage clinics</h1>
-        <p class="mt-3 max-w-3xl text-slate-600">Each clinic slug can map directly to a subdomain like <strong>slug.huviena.com</strong>. Once created here, the same codebase can render a focused booking surface for that clinic.</p>
+        <h1 class="mt-2 text-3xl font-semibold">Manage clinics and deployment access</h1>
+        <p class="mt-3 max-w-3xl text-slate-600">Use the fixed super admin account to provision clinics, switch them on or off, remove old clinics, and control the deploy token from one place.</p>
     </div>
 
-    <div class="grid gap-6 xl:grid-cols-[0.92fr_1.08fr]">
+    <div class="grid gap-6 xl:grid-cols-[0.88fr_1.12fr]">
+        <div class="panel">
+            <p class="text-sm uppercase tracking-[0.22em] text-slate-500">Deployment control</p>
+            <h2 class="mt-2 text-2xl font-semibold">Deploy token and hook URL</h2>
+            <p class="mt-3 text-sm text-slate-500">This token protects the update endpoint used by Git deployment hooks. Keep it only at platform level.</p>
+            <form method="post" action="<?= e(url('/super-admin/deploy-token')) ?>" class="mt-6 grid gap-4">
+                <?= csrf_field() ?>
+                <div>
+                    <label for="deploy_token">Deploy token</label>
+                    <input id="deploy_token" name="deploy_token" value="<?= e($deployToken) ?>" placeholder="Leave blank and save to generate a new token">
+                </div>
+                <div>
+                    <label for="deploy_hook_url">Deploy hook URL</label>
+                    <input id="deploy_hook_url" value="<?= e($deployHookUrl) ?>" readonly>
+                </div>
+                <button class="btn-primary" type="submit">Save deploy token</button>
+            </form>
+        </div>
+
         <div class="panel">
             <p class="text-sm uppercase tracking-[0.22em] text-slate-500">New clinic</p>
             <h2 class="mt-2 text-2xl font-semibold">Provision clinic admin</h2>
@@ -50,33 +68,56 @@
                 <button class="btn-primary" type="submit">Create clinic</button>
             </form>
         </div>
+    </div>
 
-        <div class="table-wrap">
-            <table class="min-w-full divide-y divide-slate-200 text-left text-sm">
-                <thead class="bg-slate-50 text-slate-500">
+    <div class="table-wrap">
+        <table class="min-w-full divide-y divide-slate-200 text-left text-sm">
+            <thead class="bg-slate-50 text-slate-500">
+            <tr>
+                <th class="px-4 py-3 font-medium">Clinic</th>
+                <th class="px-4 py-3 font-medium">Booking URL</th>
+                <th class="px-4 py-3 font-medium">Doctors</th>
+                <th class="px-4 py-3 font-medium">Status</th>
+                <th class="px-4 py-3 font-medium">Admin email</th>
+                <th class="px-4 py-3 font-medium">Actions</th>
+            </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-200 bg-white">
+            <?php foreach ($clinics as $clinic): ?>
+                <?php
+                $clinicUrl = rtrim((string) config('app.url'), '/') . '/clinics/' . $clinic['slug'];
+                $isActive = (string) $clinic['status'] === 'active';
+                ?>
                 <tr>
-                    <th class="px-4 py-3 font-medium">Clinic</th>
-                    <th class="px-4 py-3 font-medium">Slug</th>
-                    <th class="px-4 py-3 font-medium">Doctors</th>
-                    <th class="px-4 py-3 font-medium">Status</th>
-                    <th class="px-4 py-3 font-medium">Admin email</th>
+                    <td class="px-4 py-3 align-top">
+                        <strong class="block text-slate-900"><?= e($clinic['name']) ?></strong>
+                        <span class="text-slate-500"><?= e($clinic['phone']) ?></span>
+                    </td>
+                    <td class="px-4 py-3 align-top">
+                        <a class="font-medium text-brand-700" href="<?= e($clinicUrl) ?>" target="_blank" rel="noreferrer"><?= e($clinic['slug']) ?></a>
+                    </td>
+                    <td class="px-4 py-3 align-top"><?= e((string) $clinic['doctor_count']) ?></td>
+                    <td class="px-4 py-3 align-top">
+                        <span class="inline-flex rounded-full px-3 py-1 text-xs font-semibold <?= $isActive ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700' ?>">
+                            <?= e($isActive ? 'live' : 'off') ?>
+                        </span>
+                    </td>
+                    <td class="px-4 py-3 align-top"><?= e($clinic['email']) ?></td>
+                    <td class="px-4 py-3 align-top">
+                        <div class="grid gap-2 sm:grid-cols-2">
+                            <form method="post" action="<?= e(url('/super-admin/clinics/' . $clinic['id'] . '/status')) ?>">
+                                <?= csrf_field() ?>
+                                <button class="btn-secondary w-full" type="submit"><?= e($isActive ? 'Turn off' : 'Turn on') ?></button>
+                            </form>
+                            <form method="post" action="<?= e(url('/super-admin/clinics/' . $clinic['id'] . '/delete')) ?>" onsubmit="return confirm('Delete this clinic? The clinic booking page and clinic admin access will stop working.');">
+                                <?= csrf_field() ?>
+                                <button class="danger-button w-full" type="submit">Delete</button>
+                            </form>
+                        </div>
+                    </td>
                 </tr>
-                </thead>
-                <tbody class="divide-y divide-slate-200 bg-white">
-                <?php foreach ($clinics as $clinic): ?>
-                    <tr>
-                        <td class="px-4 py-3">
-                            <strong class="block text-slate-900"><?= e($clinic['name']) ?></strong>
-                            <span class="text-slate-500"><?= e($clinic['phone']) ?></span>
-                        </td>
-                        <td class="px-4 py-3 font-medium text-slate-700"><?= e($clinic['slug']) ?></td>
-                        <td class="px-4 py-3"><?= e((string) $clinic['doctor_count']) ?></td>
-                        <td class="px-4 py-3 capitalize"><?= e((string) $clinic['status']) ?></td>
-                        <td class="px-4 py-3"><?= e($clinic['email']) ?></td>
-                    </tr>
-                <?php endforeach; ?>
-                </tbody>
-            </table>
-        </div>
+            <?php endforeach; ?>
+            </tbody>
+        </table>
     </div>
 </section>

@@ -38,11 +38,6 @@
                 <input id="currency" name="currency" value="<?= e((string) ($settings['currency'] ?? 'INR')) ?>">
             </div>
         </div>
-        <div>
-            <label for="deploy_token">Deploy token</label>
-            <input id="deploy_token" name="deploy_token" value="<?= e($deployToken) ?>" placeholder="Leave as-is, or replace it to rotate the token">
-            <p class="mt-2 text-sm text-slate-500">Deploy hook URL: <span class="break-all font-medium text-slate-700"><?= e($deployHookUrl) ?></span></p>
-        </div>
         <button class="btn-primary">Save settings</button>
     </form>
 </div>

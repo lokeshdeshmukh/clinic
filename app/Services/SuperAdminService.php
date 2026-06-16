@@ -10,6 +10,11 @@ use RuntimeException;
 
 final class SuperAdminService
 {
+    private const DEFAULT_ADMIN_NAME = 'Huviena Platform Admin';
+    private const DEFAULT_ADMIN_USERNAME = 'admin';
+    private const DEFAULT_ADMIN_EMAIL = 'admin@huviena.local';
+    private const DEFAULT_ADMIN_PASSWORD_HASH = 'pbkdf2_sha256$210000$omSIygVwZ+h3EG/PYUnYUA==$u3sEI1Qva8Js/Py0HxQB5KRzL8WYzljRk6f0xGL3+XE=';
+
     public function __construct(private readonly SuperAdmin $admins = new SuperAdmin())
     {
     }
@@ -37,6 +42,7 @@ final class SuperAdminService
         $now = date('Y-m-d H:i:s');
         $adminId = $this->admins->insert([
             'name' => trim((string) ($data['name'] ?? 'Platform Admin')),
+            'username' => $this->normalizeUsername((string) ($data['username'] ?? $email)),
             'email' => $email,
             'password_hash' => password_hash((string) $data['password'], PASSWORD_DEFAULT),
             'status' => 'active',
@@ -49,10 +55,57 @@ final class SuperAdminService
         return $this->admins->findActiveById($adminId) ?? [];
     }
 
-    public function attemptLogin(string $email, string $password): bool
+    public function ensureDefaultAdmin(): void
     {
-        $admin = $this->admins->findByEmail($email);
-        if (!$admin || ($admin['status'] ?? '') !== 'active' || !password_verify($password, (string) $admin['password_hash'])) {
+        $now = date('Y-m-d H:i:s');
+        $admin = $this->admins->findByUsername(self::DEFAULT_ADMIN_USERNAME);
+
+        if ($admin) {
+            $this->admins->updateById((int) $admin['id'], [
+                'name' => self::DEFAULT_ADMIN_NAME,
+                'username' => self::DEFAULT_ADMIN_USERNAME,
+                'email' => self::DEFAULT_ADMIN_EMAIL,
+                'password_hash' => self::DEFAULT_ADMIN_PASSWORD_HASH,
+                'status' => 'active',
+                'deleted_at' => null,
+                'updated_at' => $now,
+            ]);
+            return;
+        }
+
+        $admin = $this->admins->findByEmail(self::DEFAULT_ADMIN_EMAIL);
+        if ($admin) {
+            $this->admins->updateById((int) $admin['id'], [
+                'name' => self::DEFAULT_ADMIN_NAME,
+                'username' => self::DEFAULT_ADMIN_USERNAME,
+                'email' => self::DEFAULT_ADMIN_EMAIL,
+                'password_hash' => self::DEFAULT_ADMIN_PASSWORD_HASH,
+                'status' => 'active',
+                'deleted_at' => null,
+                'updated_at' => $now,
+            ]);
+            return;
+        }
+
+        $this->admins->insert([
+            'name' => self::DEFAULT_ADMIN_NAME,
+            'username' => self::DEFAULT_ADMIN_USERNAME,
+            'email' => self::DEFAULT_ADMIN_EMAIL,
+            'password_hash' => self::DEFAULT_ADMIN_PASSWORD_HASH,
+            'status' => 'active',
+            'last_login_at' => null,
+            'created_at' => $now,
+            'updated_at' => $now,
+            'deleted_at' => null,
+        ]);
+    }
+
+    public function attemptLogin(string $identifier, string $password): bool
+    {
+        $this->ensureDefaultAdmin();
+
+        $admin = $this->admins->findByUsernameOrEmail($identifier);
+        if (!$admin || ($admin['status'] ?? '') !== 'active' || !$this->passwordMatches($password, (string) $admin['password_hash'])) {
             return false;
         }
 
@@ -63,5 +116,37 @@ final class SuperAdminService
         ]);
 
         return true;
+    }
+
+    private function passwordMatches(string $plain, string $stored): bool
+    {
+        if (str_starts_with($stored, 'pbkdf2_sha256$')) {
+            $parts = explode('$', $stored);
+            if (count($parts) !== 4) {
+                return false;
+            }
+
+            $iterations = (int) $parts[1];
+            $salt = base64_decode($parts[2], true);
+            $expected = base64_decode($parts[3], true);
+
+            if ($iterations < 1 || $salt === false || $expected === false) {
+                return false;
+            }
+
+            $computed = hash_pbkdf2('sha256', $plain, $salt, $iterations, strlen($expected), true);
+            return hash_equals($expected, $computed);
+        }
+
+        return password_verify($plain, $stored);
+    }
+
+    private function normalizeUsername(string $value): string
+    {
+        $candidate = strtolower(trim($value));
+        $candidate = preg_replace('/[^a-z0-9._-]+/', '-', $candidate) ?? 'admin';
+        $candidate = trim($candidate, '-._');
+
+        return $candidate !== '' ? $candidate : 'admin';
     }
 }

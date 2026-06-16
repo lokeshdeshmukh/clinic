@@ -81,6 +81,10 @@ final class AuthService
             return false;
         }
 
+        if (($clinic['status'] ?? '') === 'disabled') {
+            throw new RuntimeException('This clinic has been turned off by the platform admin.');
+        }
+
         if (($clinic['status'] ?? '') !== 'active') {
             throw new RuntimeException('Verify your email before signing in.');
         }

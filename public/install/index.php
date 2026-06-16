@@ -142,7 +142,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $success === null) {
 
             $deployTokenValue = (string) $replacements['DEPLOY_TOKEN'];
             $deployHookUrl = rtrim($input['app_url'], '/') . '/deploy/run-updates?token=' . urlencode($deployTokenValue);
-            $success = 'Installation completed successfully. You can now open the clinic admin registration page.';
+            $success = 'Installation completed successfully. You can now sign in to the platform admin and create clinics from there.';
         } catch (Throwable $exception) {
             $errors[] = $exception->getMessage();
         }
@@ -208,9 +208,9 @@ function installerOld(string $key, string $default = ''): string
                     </div>
                 <?php endif; ?>
                 <div style="margin-top:10px;">
-                    <a href="<?= htmlspecialchars(($appBase ?: '') . '/clinic/register', ENT_QUOTES, 'UTF-8') ?>">Open clinic registration</a>
+                    <a href="<?= htmlspecialchars(($appBase ?: '') . '/super-admin/login', ENT_QUOTES, 'UTF-8') ?>">Open platform admin login</a>
                     |
-                    <a href="<?= htmlspecialchars(($appBase ?: '') . '/patient/register', ENT_QUOTES, 'UTF-8') ?>">Open patient registration</a>
+                    <a href="<?= htmlspecialchars(($appBase ?: '') . '/clinic/register', ENT_QUOTES, 'UTF-8') ?>">Open clinic registration</a>
                 </div>
             </div>
         <?php endif; ?>

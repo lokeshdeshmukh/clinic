@@ -86,3 +86,6 @@ $router->post('/patient/appointments/{id}/reschedule', [PatientDashboardControll
 
 $router->get('/super-admin/dashboard', [SuperAdminClinicController::class, 'index'], ['auth:super_admin']);
 $router->post('/super-admin/clinics', [SuperAdminClinicController::class, 'store'], ['auth:super_admin', 'csrf']);
+$router->post('/super-admin/clinics/{id}/status', [SuperAdminClinicController::class, 'toggleStatus'], ['auth:super_admin', 'csrf']);
+$router->post('/super-admin/clinics/{id}/delete', [SuperAdminClinicController::class, 'delete'], ['auth:super_admin', 'csrf']);
+$router->post('/super-admin/deploy-token', [SuperAdminClinicController::class, 'updateDeployToken'], ['auth:super_admin', 'csrf']);

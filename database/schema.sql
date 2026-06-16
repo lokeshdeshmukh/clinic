@@ -8,3 +8,8 @@ SOURCE database/migrations/007_create_revenue_records.sql;
 SOURCE database/migrations/008_create_analytics_events.sql;
 SOURCE database/migrations/009_create_email_logs.sql;
 SOURCE database/migrations/010_create_system_settings.sql;
+SOURCE database/migrations/011_create_super_admins.sql;
+SOURCE database/migrations/012_alter_patients_for_passwordless_auth.sql;
+SOURCE database/migrations/013_create_auth_otps.sql;
+SOURCE database/migrations/014_create_patient_identities.sql;
+SOURCE database/migrations/015_add_super_admin_username_and_seed_default_admin.sql;

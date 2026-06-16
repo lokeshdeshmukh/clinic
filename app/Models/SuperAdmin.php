@@ -10,10 +10,30 @@ final class SuperAdmin extends Model
 {
     protected string $table = 'super_admins';
 
+    public function findByUsername(string $username): ?array
+    {
+        $statement = $this->db->prepare('SELECT * FROM super_admins WHERE username = :username AND deleted_at IS NULL LIMIT 1');
+        $statement->execute(['username' => strtolower(trim($username))]);
+
+        return $statement->fetch() ?: null;
+    }
+
     public function findByEmail(string $email): ?array
     {
         $statement = $this->db->prepare('SELECT * FROM super_admins WHERE email = :email AND deleted_at IS NULL LIMIT 1');
         $statement->execute(['email' => normalize_email($email)]);
+
+        return $statement->fetch() ?: null;
+    }
+
+    public function findByUsernameOrEmail(string $identifier): ?array
+    {
+        $normalized = strtolower(trim($identifier));
+        $statement = $this->db->prepare('SELECT * FROM super_admins WHERE (username = :username OR email = :email) AND deleted_at IS NULL LIMIT 1');
+        $statement->execute([
+            'username' => $normalized,
+            'email' => normalize_email($identifier),
+        ]);
 
         return $statement->fetch() ?: null;
     }
