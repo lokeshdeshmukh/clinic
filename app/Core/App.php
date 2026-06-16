@@ -4,12 +4,15 @@ declare(strict_types=1);
 
 namespace App\Core;
 
+use App\Services\MigrationService;
 use Throwable;
 
 final class App
 {
     public function run(): void
     {
+        $this->runPendingMigrationsIfEnabled();
+
         $router = new Router();
         require base_path('routes/web.php');
         require base_path('routes/api.php');
@@ -24,6 +27,24 @@ final class App
             }
 
             Response::abort(500, 'Something went wrong. Please try again.');
+        }
+    }
+
+    private function runPendingMigrationsIfEnabled(): void
+    {
+        $enabled = filter_var((string) env('AUTO_RUN_MIGRATIONS', 'true'), FILTER_VALIDATE_BOOL);
+        if ($enabled === false) {
+            return;
+        }
+
+        try {
+            (new MigrationService())->runPending();
+        } catch (Throwable $exception) {
+            $this->report($exception);
+
+            if (config('app.debug', false)) {
+                throw $exception;
+            }
         }
     }
 

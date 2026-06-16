@@ -1,5 +1,18 @@
-ALTER TABLE super_admins
-    ADD COLUMN username VARCHAR(80) NULL AFTER name;
+SET @has_username_column := (
+    SELECT COUNT(*)
+    FROM information_schema.columns
+    WHERE table_schema = DATABASE()
+      AND table_name = 'super_admins'
+      AND column_name = 'username'
+);
+SET @add_username_column_sql := IF(
+    @has_username_column = 0,
+    'ALTER TABLE super_admins ADD COLUMN username VARCHAR(80) NULL AFTER name',
+    'SELECT 1'
+);
+PREPARE add_username_column_stmt FROM @add_username_column_sql;
+EXECUTE add_username_column_stmt;
+DEALLOCATE PREPARE add_username_column_stmt;
 
 UPDATE super_admins
 SET username = CONCAT('platform-', id)
@@ -38,5 +51,18 @@ WHERE NOT EXISTS (
 ALTER TABLE super_admins
     MODIFY COLUMN username VARCHAR(80) NOT NULL;
 
-CREATE UNIQUE INDEX uniq_super_admins_username
-    ON super_admins (username);
+SET @has_username_index := (
+    SELECT COUNT(*)
+    FROM information_schema.statistics
+    WHERE table_schema = DATABASE()
+      AND table_name = 'super_admins'
+      AND index_name = 'uniq_super_admins_username'
+);
+SET @add_username_index_sql := IF(
+    @has_username_index = 0,
+    'CREATE UNIQUE INDEX uniq_super_admins_username ON super_admins (username)',
+    'SELECT 1'
+);
+PREPARE add_username_index_stmt FROM @add_username_index_sql;
+EXECUTE add_username_index_stmt;
+DEALLOCATE PREPARE add_username_index_stmt;
