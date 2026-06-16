@@ -1010,12 +1010,6 @@ body.is-patient-surface .site-main{
   font-weight:700;
 }
 
-.booking-surface__caption{
-  color:var(--muted);
-  font-size:.9rem;
-  line-height:1.6;
-}
-
 .booking-surface__form{
   display:grid;
   gap:12px;
@@ -1036,17 +1030,6 @@ body.is-patient-surface .site-main{
   align-items:flex-start;
   justify-content:space-between;
   gap:12px;
-}
-
-.booking-surface__section-head h2{
-  font-size:1.12rem;
-}
-
-.booking-surface__section-copy{
-  margin-top:4px;
-  color:var(--muted);
-  font-size:.8rem;
-  line-height:1.45;
 }
 
 .booking-surface__section-badges{
@@ -1096,6 +1079,12 @@ body.is-patient-surface .site-main{
 
 .quick-date-grid.booking-surface__dates::-webkit-scrollbar{
   display:none;
+}
+
+.booking-surface__slot-block{
+  display:grid;
+  gap:10px;
+  padding-top:4px;
 }
 
 .booking-surface__notes{

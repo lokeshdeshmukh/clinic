@@ -50,7 +50,6 @@ $clinicPhoneHref = !empty($doctor['clinic_phone'])
                 </div>
             </div>
         </div>
-        <p class="booking-surface__caption">Pick a day, tap a time, and login only when you are ready to reserve it.</p>
     </div>
 
     <form method="post" action="<?= e(url('/doctors/' . $doctor['id'] . '/book')) ?>" class="booking-surface__form" data-booking-form>
@@ -62,9 +61,7 @@ $clinicPhoneHref = !empty($doctor['clinic_phone'])
         <div class="booking-surface__panel">
             <div class="booking-surface__section-head">
                 <div>
-                    <p class="section-kicker">Select date</p>
-                    <h2>Choose a day</h2>
-                    <p class="booking-surface__section-copy">Tap a date to view open times for this doctor.</p>
+                    <p class="section-kicker">Select date and time</p>
                 </div>
                 <div class="booking-surface__section-badges">
                     <span class="section-badge section-badge--soft" data-selected-date-label><?= e(date('D, d M', strtotime($quickDates[0]['value']))) ?></span>
@@ -90,18 +87,10 @@ $clinicPhoneHref = !empty($doctor['clinic_phone'])
                 </div>
                 <button type="button" class="booking-date-pager__nav" data-date-scroll="next" aria-label="Show more dates">›</button>
             </div>
-        </div>
 
-        <div class="booking-surface__panel">
-            <div class="booking-surface__section-head">
-                <div>
-                    <p class="section-kicker">Select time</p>
-                    <h2>Available slots</h2>
-                </div>
-                <span class="section-badge" data-selected-slot-label>Tap a time</span>
+            <div class="booking-surface__slot-block">
+                <div data-slot-results class="slot-grid slot-grid--booking"></div>
             </div>
-
-            <div data-slot-results class="slot-grid slot-grid--booking"></div>
         </div>
 
         <div class="booking-surface__panel booking-surface__panel--soft">
@@ -123,13 +112,13 @@ $clinicPhoneHref = !empty($doctor['clinic_phone'])
         <div class="booking-sticky-bar booking-sticky-bar--sheet">
             <div class="booking-sticky-bar__summary">
                 <span data-selected-date-label-secondary><?= e(date('D, d M', strtotime($quickDates[0]['value']))) ?></span>
-                <strong data-selected-time-label>Pick time</strong>
+                <strong data-selected-time-label>No slot selected</strong>
             </div>
             <button
                 class="btn-primary booking-sticky-bar__button"
                 type="<?= $patientLoggedIn ? 'submit' : 'button' ?>"
                 data-booking-submit
-            ><?= $patientLoggedIn ? 'Confirm appointment' : 'Continue to login' ?></button>
+            ><?= $patientLoggedIn ? 'Confirm appointment' : 'Continue' ?></button>
         </div>
     </form>
 

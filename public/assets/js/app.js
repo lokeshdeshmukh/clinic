@@ -57,7 +57,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const selectedDateLabel = document.querySelector("[data-selected-date-label]");
     const selectedDateLabelSecondary = document.querySelector("[data-selected-date-label-secondary]");
     const selectedTimeLabel = document.querySelector("[data-selected-time-label]");
-    const selectedSlotLabel = document.querySelector("[data-selected-slot-label]");
     const dateStatus = document.querySelector("[data-date-status]");
     const authModal = document.querySelector("[data-auth-modal]");
     const authCloseButtons = Array.from(document.querySelectorAll("[data-auth-close]"));
@@ -202,11 +201,7 @@ document.addEventListener("DOMContentLoaded", () => {
       });
 
       if (selectedTimeLabel) {
-        selectedTimeLabel.textContent = "Pick time";
-      }
-
-      if (selectedSlotLabel) {
-        selectedSlotLabel.textContent = "Tap a time";
+        selectedTimeLabel.textContent = "No slot selected";
       }
     };
 
@@ -223,8 +218,8 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       bookingSubmitButton.type = "button";
-      bookingSubmitButton.disabled = false;
-      bookingSubmitButton.textContent = pendingSelection ? "Continue to login" : "Pick a time to continue";
+      bookingSubmitButton.disabled = !pendingSelection && !selectedSlotValue;
+      bookingSubmitButton.textContent = pendingSelection ? "Continue to login" : "Continue";
     };
 
     const applySelectedSlot = (value, label) => {
@@ -239,10 +234,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
       if (selectedTimeLabel) {
         selectedTimeLabel.textContent = label;
-      }
-
-      if (selectedSlotLabel) {
-        selectedSlotLabel.textContent = label;
       }
 
       updateBookingCta();
@@ -531,9 +522,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
         if (!slotInput.value) {
           event.preventDefault();
-          if (selectedSlotLabel) {
-            selectedSlotLabel.textContent = "Choose a time first";
-          }
           slotContainer.scrollIntoView({ behavior: "smooth", block: "center" });
         }
       });
@@ -547,9 +535,6 @@ document.addEventListener("DOMContentLoaded", () => {
       event.preventDefault();
 
       if (!pendingSelection && !selectedSlotValue) {
-        if (selectedSlotLabel) {
-          selectedSlotLabel.textContent = "Choose a time first";
-        }
         slotContainer.scrollIntoView({ behavior: "smooth", block: "center" });
         return;
       }
