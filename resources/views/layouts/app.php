@@ -340,7 +340,135 @@ $adminNavItems = [
                 </aside>
             </div>
         <?php else: ?>
-            <div class="site-header">
+            <div class="site-mobile-topbar site-mobile-only">
+                <button
+                    type="button"
+                    class="site-mobile-topbar__menu"
+                    data-drawer-toggle
+                    aria-expanded="false"
+                    aria-controls="siteGlobalDrawer"
+                    aria-label="Open navigation menu"
+                >
+                    <span class="site-mobile-topbar__menu-bars" aria-hidden="true">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </span>
+                </button>
+                <a href="<?= e(url('/')) ?>" class="site-mobile-topbar__brand">
+                    <span class="site-mobile-topbar__eyebrow"><?= $isScoped ? 'Clinic booking desk' : 'Huviena clinics' ?></span>
+                    <strong><?= e($isScoped ? (string) $scopedClinic['name'] : (string) config('app.name')) ?></strong>
+                </a>
+                <?php if ($guard === 'clinic'): ?>
+                    <a href="<?= e(url('/admin/dashboard')) ?>" class="site-mobile-topbar__action">Dashboard</a>
+                <?php elseif ($guard === 'super_admin'): ?>
+                    <a href="<?= e(url('/super-admin/dashboard')) ?>" class="site-mobile-topbar__action">Platform</a>
+                <?php elseif ($guard === 'patient'): ?>
+                    <a href="<?= e(url('/patient/dashboard')) ?>" class="site-mobile-topbar__action site-mobile-topbar__action--profile" aria-label="Open your bookings">
+                        <span class="site-mobile-topbar__avatar" aria-hidden="true"><?= e($patientTopbarInitials) ?></span>
+                    </a>
+                <?php elseif ($phoneHref): ?>
+                    <a href="<?= e($phoneHref) ?>" class="site-mobile-topbar__action">Call</a>
+                <?php else: ?>
+                    <a href="<?= e(url('/patient/login')) ?>" class="site-mobile-topbar__action">Login</a>
+                <?php endif; ?>
+            </div>
+
+            <div class="site-scoped-drawer site-mobile-only" id="siteGlobalDrawer" data-drawer hidden>
+                <button type="button" class="site-scoped-drawer__backdrop" data-drawer-close aria-label="Close navigation menu"></button>
+                <aside class="site-scoped-drawer__panel">
+                    <div class="site-scoped-drawer__head">
+                        <span class="site-brand__mark site-brand__mark--drawer">
+                            <?php if ($isScoped && !empty($scopedClinic['logo_path'])): ?>
+                                <img src="<?= e(url((string) $scopedClinic['logo_path'])) ?>" alt="<?= e($scopedClinic['name']) ?>" class="site-brand__logo">
+                            <?php else: ?>
+                                <?= e($brandInitial) ?>
+                            <?php endif; ?>
+                        </span>
+                        <div>
+                            <p class="site-mobile-topbar__eyebrow"><?= $isScoped ? 'Clinic booking desk' : 'Huviena clinics' ?></p>
+                            <strong><?= e($isScoped ? (string) $scopedClinic['name'] : (string) config('app.name')) ?></strong>
+                            <?php if ($currentUserIdentity !== '' || $phoneHref): ?>
+                                <div class="site-scoped-drawer__contact">
+                                    <p class="site-subheader__meta"><?= e((string) ($currentUserIdentity !== '' ? $currentUserIdentity : ($publicClinicContext['phone'] ?? ''))) ?></p>
+                                    <?php if ($phoneHref): ?>
+                                        <a href="<?= e($phoneHref) ?>" class="site-scoped-drawer__phone-link" aria-label="Call clinic">
+                                            <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                                                <path d="M5.3 3.8h2.1l1 3.1-1.3 1.3a11.2 11.2 0 0 0 4.7 4.7l1.3-1.3 3.1 1v2.1a1.5 1.5 0 0 1-1.6 1.5A12.9 12.9 0 0 1 3.8 5.4 1.5 1.5 0 0 1 5.3 3.8Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                            </svg>
+                                        </a>
+                                    <?php endif; ?>
+                                </div>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                    <nav class="site-scoped-drawer__nav">
+                        <?php if ($isScoped): ?>
+                            <?php if ($guard === 'clinic'): ?>
+                                <a href="<?= e(url('/admin/dashboard')) ?>">Dashboard</a>
+                                <?php if ($publicBookingHref !== '/'): ?>
+                                    <a href="<?= e(url($publicBookingHref)) ?>">Open booking page</a>
+                                <?php endif; ?>
+                                <form method="post" action="<?= e(url('/clinic/logout')) ?>">
+                                    <?= csrf_field() ?>
+                                    <button type="submit">Logout</button>
+                                </form>
+                            <?php elseif ($guard === 'super_admin'): ?>
+                                <a href="<?= e(url('/super-admin/dashboard')) ?>">Platform dashboard</a>
+                                <form method="post" action="<?= e(url('/super-admin/logout')) ?>">
+                                    <?= csrf_field() ?>
+                                    <button type="submit">Logout</button>
+                                </form>
+                            <?php elseif ($guard === 'patient'): ?>
+                                <a href="<?= e(url('/patient/dashboard')) ?>">My bookings</a>
+                                <form method="post" action="<?= e(url('/patient/logout')) ?>">
+                                    <?= csrf_field() ?>
+                                    <button type="submit">Logout</button>
+                                </form>
+                            <?php else: ?>
+                                <a href="<?= e(url($publicBookingHref !== '/' ? $publicBookingHref : '/patient/login')) ?>">Book appointment</a>
+                                <?php if ($showClinicHomeLink): ?>
+                                    <a href="<?= e(url($clinicHomeHref)) ?>">Clinic home</a>
+                                <?php endif; ?>
+                                <a href="<?= e(url('/patient/login')) ?>">Patient login</a>
+                                <a href="<?= e(url('/clinic/login')) ?>">Clinic admin</a>
+                            <?php endif; ?>
+                        <?php else: ?>
+                            <a href="<?= e(url('/clinics')) ?>">Clinics</a>
+                            <?php if ($guard === 'clinic'): ?>
+                                <a href="<?= e(url('/admin/dashboard')) ?>">Dashboard</a>
+                                <form method="post" action="<?= e(url('/clinic/logout')) ?>">
+                                    <?= csrf_field() ?>
+                                    <button type="submit">Logout</button>
+                                </form>
+                            <?php elseif ($guard === 'super_admin'): ?>
+                                <a href="<?= e(url('/super-admin/dashboard')) ?>">Platform dashboard</a>
+                                <form method="post" action="<?= e(url('/super-admin/logout')) ?>">
+                                    <?= csrf_field() ?>
+                                    <button type="submit">Logout</button>
+                                </form>
+                            <?php elseif ($guard === 'patient'): ?>
+                                <a href="<?= e(url('/patient/dashboard')) ?>">My bookings</a>
+                                <form method="post" action="<?= e(url('/patient/logout')) ?>">
+                                    <?= csrf_field() ?>
+                                    <button type="submit">Logout</button>
+                                </form>
+                            <?php else: ?>
+                                <a href="<?= e(url('/patient/login')) ?>">Patient login</a>
+                                <a href="<?= e(url('/clinic/login')) ?>">Clinic admin</a>
+                            <?php endif; ?>
+                        <?php endif; ?>
+                    </nav>
+                    <div class="site-scoped-drawer__footer">
+                        <span>Build <?= e(config('app.build.version')) ?></span>
+                        <?php if (!empty($publicClinicContext['address'])): ?>
+                            <span><?= e((string) $publicClinicContext['address']) ?></span>
+                        <?php endif; ?>
+                    </div>
+                </aside>
+            </div>
+
+            <div class="site-header site-desktop-only">
                 <a href="<?= e(url('/')) ?>" class="site-brand">
                     <span class="site-brand__mark">
                         <?php if ($isScoped && !empty($scopedClinic['logo_path'])): ?>
