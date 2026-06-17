@@ -145,6 +145,11 @@ body.is-admin-surface .site-header-shell{
   display:none;
 }
 
+.site-mobile-only[hidden],
+.site-scoped-drawer[hidden]{
+  display:none !important;
+}
+
 .site-mobile-topbar{
   display:grid;
   grid-template-columns:44px minmax(0,1fr) auto;
@@ -1939,7 +1944,7 @@ body.is-patient-surface .history-card__meta{
     display:grid;
   }
 
-  .site-scoped-drawer.site-mobile-only{
+  .site-scoped-drawer.site-mobile-only:not([hidden]){
     display:block;
   }
 
@@ -1947,8 +1952,167 @@ body.is-patient-surface .history-card__meta{
     display:none;
   }
 
+  .site-header-shell{
+    padding-top:14px;
+  }
+
+  .site-main{
+    margin-top:4px;
+  }
+
   .site-nav{
     justify-content:flex-start;
+  }
+
+  .directory-shell,
+  .clinic-list-shell,
+  .clinic-landing,
+  .doctor-section,
+  .doctor-profile-shell,
+  .booking-shell,
+  .dashboard-shell{
+    gap:14px;
+  }
+
+  .directory-hero,
+  .clinic-hero,
+  .doctor-profile-card,
+  .booking-grid,
+  .auth-shell{
+    gap:14px;
+  }
+
+  .directory-hero__copy,
+  .clinic-hero__copy,
+  .doctor-profile-card__content,
+  .booking-panel,
+  .auth-aside,
+  .auth-card,
+  .appointment-card,
+  .history-card,
+  .clinic-tile,
+  .feature-band__item{
+    padding:18px;
+    border-radius:24px;
+  }
+
+  .directory-hero__copy h1,
+  .clinic-hero__copy h1{
+    font-size:clamp(1.9rem, 8.8vw, 2.6rem);
+    line-height:1.02;
+    margin:10px 0 12px;
+  }
+
+  .directory-hero__copy p,
+  .clinic-hero__lead{
+    font-size:.93rem;
+    line-height:1.62;
+  }
+
+  .hero-actions{
+    gap:10px;
+  }
+
+  .hero-actions .btn-primary,
+  .hero-actions .btn-secondary{
+    width:100%;
+    min-height:46px;
+    font-size:.96rem;
+  }
+
+  .preview-phone{
+    padding:14px;
+    border-radius:24px;
+  }
+
+  .preview-phone__top{
+    margin-bottom:12px;
+    font-size:.76rem;
+  }
+
+  .preview-phone__card{
+    padding:14px;
+    border-radius:22px;
+  }
+
+  .preview-phone__card h2{
+    font-size:1.16rem;
+    line-height:1.18;
+  }
+
+  .preview-phone__card p,
+  .preview-phone__card span{
+    margin-top:6px;
+    font-size:.84rem;
+    line-height:1.5;
+  }
+
+  .feature-band,
+  .clinic-list-grid,
+  .doctor-grid,
+  .history-grid{
+    gap:12px;
+  }
+
+  .feature-band__number{
+    width:36px;
+    height:36px;
+    margin-bottom:12px;
+    border-radius:12px;
+    font-size:.82rem;
+  }
+
+  .feature-band__item h3,
+  .doctor-card__identity h3,
+  .doctor-profile-card__summary h2,
+  .clinic-tile h2,
+  .clinic-tile h3,
+  .appointment-card h3,
+  .history-card h3{
+    font-size:1.02rem;
+  }
+
+  .feature-band__item p,
+  .clinic-tile p,
+  .doctor-card__bio,
+  .doctor-profile-card__about p,
+  .doctor-empty-state p,
+  .auth-aside p,
+  .booking-status-card p{
+    margin-top:8px;
+    font-size:.9rem;
+    line-height:1.58;
+  }
+
+  .clinic-tile__top,
+  .doctor-card__top,
+  .clinic-badge-card__brand,
+  .appointment-card__top,
+  .history-card__top{
+    gap:12px;
+  }
+
+  .clinic-tile__logo,
+  .clinic-badge-card__logo{
+    width:52px;
+    height:52px;
+    border-radius:16px;
+  }
+
+  .doctor-card__avatar{
+    width:58px;
+    height:58px;
+    border-radius:18px;
+    font-size:1rem;
+  }
+
+  .clinic-tile__meta,
+  .doctor-card__meta,
+  .appointment-card__meta,
+  .history-card__meta{
+    margin-top:12px;
+    padding-top:12px;
+    font-size:.82rem;
   }
 
   .site-subheader{
