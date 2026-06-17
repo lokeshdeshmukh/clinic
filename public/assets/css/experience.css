@@ -145,6 +145,11 @@ body.is-admin-surface .site-header-shell{
   display:none;
 }
 
+.site-mobile-topbar.site-mobile-only,
+.site-scoped-drawer.site-mobile-only{
+  display:none;
+}
+
 .site-mobile-only[hidden],
 .site-scoped-drawer[hidden]{
   display:none !important;
