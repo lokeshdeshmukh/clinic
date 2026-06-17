@@ -88,12 +88,7 @@ final class SmsService
 
     private function composeOtpMessage(string $otp): string
     {
-        return sprintf(
-            '%s login code is %s. It expires in %d minutes.',
-            (string) config('app.name', 'ClinicFlow'),
-            $otp,
-            (int) config('services.otp.ttl_minutes', 10)
-        );
+        return sprintf('Use this OTP %s - CF', $otp);
     }
 
     private function formatBridgePhone(string $phone, string $rawPhone = ''): string
