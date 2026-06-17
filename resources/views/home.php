@@ -2,7 +2,7 @@
     <div class="directory-hero">
         <div class="directory-hero__copy">
             <span class="eyebrow-pill">Built for clinic links shared on WhatsApp</span>
-            <h1>One booking system for every clinic, with a patient experience that feels like a dedicated app.</h1>
+            <h3>One booking system for every clinic, with a patient experience that feels like a dedicated app.</h3>
             <p>Each clinic can use the same platform while getting its own mobile-first booking surface, doctor listing, patient login, reminders, and appointment flow.</p>
             <div class="hero-actions">
                 <a href="<?= e(url('/clinics')) ?>" class="btn-primary">Browse clinics</a>
