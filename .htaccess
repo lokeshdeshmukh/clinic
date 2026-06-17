@@ -12,6 +12,7 @@ RewriteRule ^ - [L]
 # Send installer and asset requests to the public directory.
 RewriteRule ^install/?(.*)$ public/install/$1 [L]
 RewriteRule ^assets/(.*)$ public/assets/$1 [L]
+RewriteRule ^uploads/(.*)$ public/uploads/$1 [L]
 
 # All application routes go through the root front controller.
 RewriteRule ^ index.php [L]
