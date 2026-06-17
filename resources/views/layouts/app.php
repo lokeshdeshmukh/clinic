@@ -47,9 +47,14 @@ if ($publicClinicContext === null && isset($doctor) && is_array($doctor) && !emp
 }
 $isPublicClinicRoute = str_starts_with($requestPath, '/clinics') || str_starts_with($requestPath, '/doctors');
 $isPatientFacingScoped = !$isManagementSurface
-    && $guard !== 'clinic'
-    && $guard !== 'super_admin'
-    && ($isScoped || ($isPublicClinicRoute && $publicClinicContext !== null));
+    && (
+        $guard === 'patient'
+        || (
+            $guard !== 'clinic'
+            && $guard !== 'super_admin'
+            && ($isScoped || ($isPublicClinicRoute && $publicClinicContext !== null))
+        )
+    );
 $phoneHref = $publicClinicContext !== null && !empty($publicClinicContext['phone'])
     ? 'tel:' . preg_replace('/[^0-9+]/', '', (string) $publicClinicContext['phone'])
     : null;
@@ -69,10 +74,37 @@ $publicBookingHref = $publicClinicHref;
 if (isset($doctor) && is_array($doctor) && !empty($doctor['id'])) {
     $publicBookingHref = '/doctors/' . $doctor['id'] . '/book';
 }
+$patientSurfaceBrandHref = $publicClinicHref !== '/'
+    ? $publicClinicHref
+    : ($guard === 'patient' && str_starts_with($requestPath, '/patient') ? '/patient/dashboard' : '/clinics');
+$patientSurfaceEyebrow = $publicClinicContext !== null
+    ? 'Clinic booking'
+    : ($guard === 'patient' && str_starts_with($requestPath, '/patient') ? 'Patient account' : 'Clinic booking');
+$patientSurfaceTitle = $publicClinicContext['name']
+    ?? ($guard === 'patient' && str_starts_with($requestPath, '/patient') ? 'My bookings' : config('app.name'));
+$patientSurfacePrimaryHref = $publicBookingHref !== '/' ? $publicBookingHref : ($guard === 'patient' ? '/clinics' : '/');
+$patientSurfacePrimaryLabel = $publicBookingHref !== '/' ? 'Book appointment' : ($guard === 'patient' ? 'Browse clinics' : 'Book appointment');
 $footerBrandName = $publicClinicContext['name'] ?? ($isScoped ? (string) $scopedClinic['name'] : (string) config('app.name'));
 $brandInitial = $publicClinicContext !== null
     ? strtoupper(substr((string) $publicClinicContext['name'], 0, 1))
     : 'H';
+$patientTopbarInitials = 'P';
+if ($guard === 'patient' && is_array($currentUser)) {
+    $initialParts = [];
+    $firstName = trim((string) ($currentUser['first_name'] ?? ''));
+    $lastName = trim((string) ($currentUser['last_name'] ?? ''));
+    if ($firstName !== '') {
+        $initialParts[] = strtoupper(substr($firstName, 0, 1));
+    }
+    if ($lastName !== '') {
+        $initialParts[] = strtoupper(substr($lastName, 0, 1));
+    }
+    if ($initialParts === []) {
+        $fallbackIdentity = trim((string) ($currentUser['name'] ?? $currentUser['email'] ?? $currentUser['phone'] ?? 'P'));
+        $initialParts[] = strtoupper(substr($fallbackIdentity, 0, 1));
+    }
+    $patientTopbarInitials = substr(implode('', $initialParts), 0, 2);
+}
 $currentUserIdentity = $currentUser['email'] ?? $currentUser['phone'] ?? $currentUser['name'] ?? '';
 $adminClinicName = (string) ($currentUser['name'] ?? ($publicClinicContext['name'] ?? config('app.name')));
 $adminActionHref = '/admin/settings';
@@ -163,12 +195,14 @@ $adminNavItems = [
                         <span></span>
                     </span>
                 </button>
-                <a href="<?= e(url($publicClinicHref)) ?>" class="site-mobile-topbar__brand">
-                    <span class="site-mobile-topbar__eyebrow">Clinic booking</span>
-                    <strong><?= e((string) ($publicClinicContext['name'] ?? config('app.name'))) ?></strong>
+                <a href="<?= e(url($patientSurfaceBrandHref)) ?>" class="site-mobile-topbar__brand">
+                    <span class="site-mobile-topbar__eyebrow"><?= e($patientSurfaceEyebrow) ?></span>
+                    <strong><?= e((string) $patientSurfaceTitle) ?></strong>
                 </a>
                 <?php if ($guard === 'patient'): ?>
-                    <a href="<?= e(url('/patient/dashboard')) ?>" class="site-mobile-topbar__action">My visits</a>
+                    <a href="<?= e(url('/patient/dashboard')) ?>" class="site-mobile-topbar__action site-mobile-topbar__action--profile" aria-label="Open your bookings">
+                        <span class="site-mobile-topbar__avatar" aria-hidden="true"><?= e($patientTopbarInitials) ?></span>
+                    </a>
                 <?php elseif ($phoneHref): ?>
                     <a href="<?= e($phoneHref) ?>" class="site-mobile-topbar__action">Call</a>
                 <?php else: ?>
@@ -182,16 +216,20 @@ $adminNavItems = [
                     <div class="site-scoped-drawer__head">
                         <span class="site-brand__mark site-brand__mark--drawer">
                             <?php if (!empty($publicClinicContext['logo_path'])): ?>
-                                <img src="<?= e(url((string) $publicClinicContext['logo_path'])) ?>" alt="<?= e((string) ($publicClinicContext['name'] ?? config('app.name'))) ?>" class="site-brand__logo">
+                                <img src="<?= e(url((string) $publicClinicContext['logo_path'])) ?>" alt="<?= e((string) $patientSurfaceTitle) ?>" class="site-brand__logo">
                             <?php else: ?>
                                 <?= e($brandInitial) ?>
                             <?php endif; ?>
                         </span>
                         <div>
-                            <p class="site-mobile-topbar__eyebrow">Clinic booking</p>
-                            <strong><?= e((string) ($publicClinicContext['name'] ?? config('app.name'))) ?></strong>
+                            <p class="site-mobile-topbar__eyebrow"><?= e($patientSurfaceEyebrow) ?></p>
+                            <strong><?= e((string) $patientSurfaceTitle) ?></strong>
                             <div class="site-scoped-drawer__contact">
-                                <p class="site-subheader__meta"><?= e((string) ($publicClinicContext['phone'] ?? '')) ?></p>
+                                <?php if ($currentUserIdentity !== '' && $guard === 'patient' && $publicClinicContext === null): ?>
+                                    <p class="site-subheader__meta"><?= e((string) $currentUserIdentity) ?></p>
+                                <?php else: ?>
+                                    <p class="site-subheader__meta"><?= e((string) ($publicClinicContext['phone'] ?? '')) ?></p>
+                                <?php endif; ?>
                                 <?php if ($phoneHref): ?>
                                     <a href="<?= e($phoneHref) ?>" class="site-scoped-drawer__phone-link" aria-label="Call clinic">
                                         <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
@@ -203,7 +241,7 @@ $adminNavItems = [
                         </div>
                     </div>
                     <nav class="site-scoped-drawer__nav">
-                        <a href="<?= e(url($publicBookingHref)) ?>">Book appointment</a>
+                        <a href="<?= e(url($patientSurfacePrimaryHref)) ?>"><?= e($patientSurfacePrimaryLabel) ?></a>
                         <?php if ($showClinicHomeLink): ?>
                             <a href="<?= e(url($clinicHomeHref)) ?>">Clinic home</a>
                         <?php endif; ?>

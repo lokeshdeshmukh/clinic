@@ -223,6 +223,30 @@ body.is-admin-surface .site-header-shell{
   flex-shrink:0;
 }
 
+.site-mobile-topbar__action--profile{
+  width:40px;
+  min-width:40px;
+  min-height:40px;
+  padding:0;
+  border-radius:16px;
+  background:transparent;
+}
+
+.site-mobile-topbar__avatar{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  width:36px;
+  height:36px;
+  border-radius:14px;
+  background:linear-gradient(135deg,#1c4eca 0%,#169bb0 100%);
+  color:#fff;
+  font-size:.76rem;
+  font-weight:800;
+  letter-spacing:.06em;
+  box-shadow:0 14px 24px -20px rgba(28,78,202,.72);
+}
+
 .site-scoped-drawer{
   position:fixed;
   inset:0;
@@ -725,6 +749,19 @@ body.is-patient-surface .site-main{
   display:flex;
   align-items:flex-start;
   gap:14px;
+}
+
+.appointment-card__schedule{
+  display:grid;
+  justify-items:end;
+  gap:8px;
+  text-align:right;
+}
+
+.appointment-card__time{
+  font-size:1rem;
+  line-height:1.1;
+  color:var(--ink);
 }
 
 .clinic-tile__logo,
@@ -1776,6 +1813,16 @@ body.is-patient-surface .site-main{
 
   .site-mobile-topbar__eyebrow{
     display:none;
+  }
+
+  .appointment-card__top,
+  .history-card__top{
+    flex-direction:column;
+  }
+
+  .appointment-card__schedule{
+    justify-items:start;
+    text-align:left;
   }
 
   .slot-grid--booking{
