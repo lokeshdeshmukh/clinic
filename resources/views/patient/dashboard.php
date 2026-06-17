@@ -20,77 +20,94 @@ $formatAppointmentTime = static function (?string $value): string {
 
     return $timestamp ? date('g:i A', $timestamp) : $value;
 };
-?>
-<section class="dashboard-shell">
-    <div class="section-headline">
-        <div>
-            <p class="section-kicker"><?= $scopedClinic ? e($scopedClinic['name']) : 'Patient dashboard' ?></p>
-            <h1>Manage your appointments</h1>
-            <p class="section-copy"><?= $scopedClinic ? 'This view is filtered to the current clinic subdomain.' : 'Review upcoming visits, reschedule when needed, and keep track of past appointments.' ?></p>
-        </div>
-        <a href="<?= e(url($bookAnotherHref)) ?>" class="btn-primary">Book another</a>
-    </div>
+$nextAppointment = $upcomingAppointments[0] ?? null;
+$remainingUpcomingAppointments = array_slice($upcomingAppointments, 1);
+$renderUpcomingAppointment = static function (array $appointment) use ($formatAppointmentDate, $formatAppointmentTime): string {
+    $appointmentDateValue = (string) ($appointment['appointment_date'] ?? '');
+    $appointmentTimeValue = (string) ($appointment['start_time'] ?? '');
+    $appointmentDateLabel = $formatAppointmentDate($appointmentDateValue);
+    $appointmentTimeLabel = $formatAppointmentTime($appointmentTimeValue);
+    $appointmentTimeInput = $appointmentTimeValue !== '' ? substr($appointmentTimeValue, 0, 5) : '';
 
-    <div class="appointment-stack">
-        <div class="section-headline section-headline--compact">
+    ob_start();
+    ?>
+    <article class="appointment-card">
+        <div class="appointment-card__top">
             <div>
-                <p class="section-kicker">Upcoming</p>
-                <h2>Your next visits</h2>
+                <h3><?= e($appointment['doctor_name']) ?></h3>
+                <p><?= e($appointment['specialization']) ?></p>
+            </div>
+            <div class="appointment-card__schedule">
+                <span class="section-badge"><?= e($appointmentDateLabel) ?></span>
+                <strong class="appointment-card__time"><?= e($appointmentTimeLabel) ?></strong>
             </div>
         </div>
 
-        <?php if ($upcomingAppointments === []): ?>
+        <div class="appointment-card__meta">
+            <span><?= e($appointment['clinic_name']) ?></span>
+            <span><?= e($appointment['clinic_phone']) ?></span>
+        </div>
+
+        <div class="appointment-card__actions appointment-card__actions--compact">
+            <details class="appointment-card__reschedule">
+                <summary class="appointment-card__summary-button">Reschedule</summary>
+                <form method="post" action="<?= e(url('/patient/appointments/' . $appointment['id'] . '/reschedule')) ?>" class="appointment-card__form appointment-card__form--compact">
+                    <?= csrf_field() ?>
+                    <div class="form-grid-2">
+                        <input type="date" name="appointment_date" min="<?= e(date('Y-m-d')) ?>" value="<?= e($appointmentDateValue) ?>" required>
+                        <input type="time" name="start_time" value="<?= e($appointmentTimeInput) ?>" required>
+                    </div>
+                    <button class="btn-secondary w-full" type="submit">Update slot</button>
+                </form>
+            </details>
+
+            <form method="post" action="<?= e(url('/patient/appointments/' . $appointment['id'] . '/cancel')) ?>">
+                <?= csrf_field() ?>
+                <input type="hidden" name="reason" value="Cancelled from patient dashboard">
+                <button class="danger-button danger-button--compact w-full" type="submit">Cancel appointment</button>
+            </form>
+        </div>
+    </article>
+    <?php
+
+    return (string) ob_get_clean();
+};
+?>
+<section class="dashboard-shell dashboard-shell--patient">
+    <div class="section-headline section-headline--compact dashboard-shell__heading">
+        <div>
+            <p class="section-kicker"><?= $nextAppointment ? 'Upcoming next visit' : 'Patient dashboard' ?></p>
+            <h1><?= $nextAppointment ? 'Your next visit' : 'Your bookings' ?></h1>
+        </div>
+    </div>
+
+    <div class="appointment-stack">
+        <?php if ($nextAppointment === null): ?>
             <div class="doctor-empty-state">
                 <h3>No upcoming appointments yet.</h3>
                 <p>Once you confirm a booking it will appear here with clinic details and reschedule actions.</p>
             </div>
+        <?php else: ?>
+            <?= $renderUpcomingAppointment($nextAppointment) ?>
         <?php endif; ?>
 
-        <?php foreach ($upcomingAppointments as $appointment): ?>
-            <?php
-            $appointmentDateValue = (string) ($appointment['appointment_date'] ?? '');
-            $appointmentTimeValue = (string) ($appointment['start_time'] ?? '');
-            $appointmentDateLabel = $formatAppointmentDate($appointmentDateValue);
-            $appointmentTimeLabel = $formatAppointmentTime($appointmentTimeValue);
-            $appointmentTimeInput = $appointmentTimeValue !== '' ? substr($appointmentTimeValue, 0, 5) : '';
-            ?>
-            <article class="appointment-card">
-                <div class="appointment-card__top">
-                    <div>
-                        <h3><?= e($appointment['doctor_name']) ?></h3>
-                        <p><?= e($appointment['specialization']) ?></p>
-                    </div>
-                    <div class="appointment-card__schedule">
-                        <span class="section-badge"><?= e($appointmentDateLabel) ?></span>
-                        <strong class="appointment-card__time"><?= e($appointmentTimeLabel) ?></strong>
-                    </div>
-                </div>
-
-                <div class="appointment-card__meta">
-                    <span><?= e($appointment['clinic_name']) ?></span>
-                    <span><?= e($appointment['clinic_phone']) ?></span>
-                    <span>Booked for <?= e($appointmentDateLabel) ?> at <?= e($appointmentTimeLabel) ?></span>
-                </div>
-
-                <div class="appointment-card__actions">
-                    <form method="post" action="<?= e(url('/patient/appointments/' . $appointment['id'] . '/reschedule')) ?>" class="appointment-card__form">
-                        <?= csrf_field() ?>
-                        <div class="form-grid-2">
-                            <input type="date" name="appointment_date" min="<?= e(date('Y-m-d')) ?>" value="<?= e($appointmentDateValue) ?>" required>
-                            <input type="time" name="start_time" value="<?= e($appointmentTimeInput) ?>" required>
-                        </div>
-                        <button class="btn-secondary w-full" type="submit">Reschedule</button>
-                    </form>
-
-                    <form method="post" action="<?= e(url('/patient/appointments/' . $appointment['id'] . '/cancel')) ?>">
-                        <?= csrf_field() ?>
-                        <input type="hidden" name="reason" value="Cancelled from patient dashboard">
-                        <button class="danger-button w-full" type="submit">Cancel appointment</button>
-                    </form>
-                </div>
-            </article>
-        <?php endforeach; ?>
+        <a href="<?= e(url($bookAnotherHref)) ?>" class="btn-primary dashboard-shell__cta">Book another</a>
     </div>
+
+    <?php if ($remainingUpcomingAppointments !== []): ?>
+        <div class="appointment-stack">
+            <div class="section-headline section-headline--compact">
+                <div>
+                    <p class="section-kicker">More upcoming</p>
+                    <h2>Other booked visits</h2>
+                </div>
+            </div>
+
+            <?php foreach ($remainingUpcomingAppointments as $appointment): ?>
+                <?= $renderUpcomingAppointment($appointment) ?>
+            <?php endforeach; ?>
+        </div>
+    <?php endif; ?>
 
     <div class="appointment-stack">
         <div class="section-headline section-headline--compact">

@@ -444,7 +444,7 @@ body.is-admin-surface .site-header-shell{
 }
 
 body.is-patient-surface .site-main{
-  padding-top:14px;
+  padding:12px 0 30px;
 }
 
 .site-footer{
@@ -470,6 +470,12 @@ body.is-patient-surface .site-main{
   font-weight:600;
   border:1px solid transparent;
   box-shadow:var(--shadow);
+}
+
+body.is-patient-surface .notice{
+  margin-bottom:14px;
+  padding:12px 14px;
+  border-radius:18px;
 }
 
 .notice--success{
@@ -509,6 +515,14 @@ body.is-patient-surface .site-main{
   background:rgba(255,255,255,.9);
 }
 
+body.is-patient-surface .btn-primary,
+body.is-patient-surface .btn-secondary,
+body.is-patient-surface .danger-button{
+  min-height:44px;
+  border-radius:16px;
+  font-size:.88rem;
+}
+
 .hero-actions{
   display:flex;
   flex-wrap:wrap;
@@ -528,8 +542,17 @@ body.is-patient-surface .site-main{
   margin-bottom:22px;
 }
 
+body.is-patient-surface .section-headline{
+  gap:10px;
+  margin-bottom:14px;
+}
+
 .section-headline--compact{
   margin-bottom:14px;
+}
+
+body.is-patient-surface .section-headline--compact{
+  margin-bottom:10px;
 }
 
 .section-headline h1,
@@ -542,6 +565,16 @@ body.is-patient-surface .site-main{
   font-size:clamp(1.45rem, 3vw, 2.1rem);
 }
 
+body.is-patient-surface .section-headline h1{
+  font-size:clamp(1.55rem, 6vw, 2.05rem);
+  line-height:1.07;
+}
+
+body.is-patient-surface .section-headline h2{
+  font-size:clamp(1.2rem, 4.8vw, 1.5rem);
+  line-height:1.12;
+}
+
 .section-kicker{
   margin-bottom:8px;
   font-size:.76rem;
@@ -551,10 +584,20 @@ body.is-patient-surface .site-main{
   color:#6d7ea0;
 }
 
+body.is-patient-surface .section-kicker{
+  margin-bottom:4px;
+  font-size:.72rem;
+}
+
 .section-copy{
   max-width:52rem;
   color:var(--muted);
   line-height:1.75;
+}
+
+body.is-patient-surface .section-copy{
+  font-size:.94rem;
+  line-height:1.58;
 }
 
 .directory-shell,
@@ -566,6 +609,16 @@ body.is-patient-surface .site-main{
 .dashboard-shell{
   display:grid;
   gap:22px;
+}
+
+body.is-patient-surface .directory-shell,
+body.is-patient-surface .clinic-list-shell,
+body.is-patient-surface .clinic-landing,
+body.is-patient-surface .doctor-section,
+body.is-patient-surface .doctor-profile-shell,
+body.is-patient-surface .booking-shell,
+body.is-patient-surface .dashboard-shell{
+  gap:16px;
 }
 
 .directory-hero,
@@ -613,6 +666,20 @@ body.is-patient-surface .site-main{
 .clinic-tile,
 .feature-band__item{
   padding:24px;
+}
+
+body.is-patient-surface .directory-hero__copy,
+body.is-patient-surface .clinic-hero__copy,
+body.is-patient-surface .doctor-profile-card__content,
+body.is-patient-surface .booking-panel,
+body.is-patient-surface .auth-aside,
+body.is-patient-surface .auth-card,
+body.is-patient-surface .appointment-card,
+body.is-patient-surface .history-card,
+body.is-patient-surface .clinic-tile,
+body.is-patient-surface .feature-band__item{
+  padding:18px;
+  border-radius:24px;
 }
 
 .directory-hero__copy h1,
@@ -764,6 +831,23 @@ body.is-patient-surface .site-main{
   color:var(--ink);
 }
 
+.dashboard-shell--patient{
+  gap:14px;
+}
+
+.dashboard-shell__heading{
+  margin-bottom:0;
+}
+
+.dashboard-shell__heading h1{
+  font-size:clamp(1.45rem, 5.6vw, 1.9rem);
+  line-height:1.06;
+}
+
+.dashboard-shell__cta{
+  margin-top:2px;
+}
+
 .clinic-tile__logo,
 .doctor-card__avatar,
 .clinic-badge-card__logo,
@@ -809,6 +893,14 @@ body.is-patient-surface .site-main{
   border-top:1px solid var(--line);
   font-size:.88rem;
   color:#69809f;
+}
+
+body.is-patient-surface .appointment-card__meta,
+body.is-patient-surface .history-card__meta{
+  margin-top:12px;
+  padding-top:12px;
+  gap:8px;
+  font-size:.84rem;
 }
 
 .clinic-tile__actions,
@@ -1660,9 +1752,52 @@ body.is-patient-surface .site-main{
   margin-top:18px;
 }
 
+.appointment-card__actions--compact{
+  gap:10px;
+  margin-top:14px;
+}
+
 .appointment-card__form{
   display:grid;
   gap:12px;
+}
+
+.appointment-card__form--compact{
+  padding-top:8px;
+}
+
+.appointment-card__reschedule{
+  display:grid;
+  gap:0;
+}
+
+.appointment-card__reschedule summary{
+  list-style:none;
+}
+
+.appointment-card__reschedule summary::-webkit-details-marker{
+  display:none;
+}
+
+.appointment-card__summary-button{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-height:44px;
+  padding:0 16px;
+  border:1px solid var(--line);
+  border-radius:16px;
+  background:rgba(255,255,255,.9);
+  color:#29415f;
+  font-size:.88rem;
+  font-weight:700;
+  cursor:pointer;
+}
+
+.appointment-card__reschedule[open] .appointment-card__summary-button{
+  border-color:#97baf1;
+  background:var(--brand-soft);
+  color:var(--brand-deep);
 }
 
 .danger-button{
@@ -1677,6 +1812,10 @@ body.is-patient-surface .site-main{
   color:#b83a57;
   font-size:.9rem;
   font-weight:700;
+}
+
+.danger-button--compact{
+  min-height:44px;
 }
 
 .history-card__status{
@@ -1755,6 +1894,10 @@ body.is-patient-surface .site-main{
   .appointment-card__actions{
     grid-template-columns:repeat(2,minmax(0,1fr));
   }
+
+  .appointment-card__actions--compact{
+    grid-template-columns:1fr;
+  }
 }
 
 @media (min-width:992px){
@@ -1775,6 +1918,12 @@ body.is-patient-surface .site-main{
   .site-main,
   .site-footer__inner{
     width:min(100% - 24px, 1180px);
+  }
+
+  body.is-patient-surface .site-header-shell,
+  body.is-patient-surface .site-main,
+  body.is-patient-surface .site-footer__inner{
+    width:min(100% - 20px, 1180px);
   }
 
   .site-header{
@@ -1813,6 +1962,22 @@ body.is-patient-surface .site-main{
 
   .site-mobile-topbar__eyebrow{
     display:none;
+  }
+
+  body.is-patient-surface .site-mobile-topbar{
+    gap:8px;
+    padding:8px;
+    border-radius:16px;
+  }
+
+  body.is-patient-surface .site-mobile-topbar__menu{
+    width:40px;
+    height:40px;
+    border-radius:13px;
+  }
+
+  body.is-patient-surface .site-mobile-topbar__brand strong{
+    font-size:.96rem;
   }
 
   .appointment-card__top,
