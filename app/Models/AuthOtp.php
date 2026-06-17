@@ -154,24 +154,29 @@ final class AuthOtp extends Model
             return false;
         }
 
-        $statement = $this->db->prepare('UPDATE auth_otps
-            SET delivery_status = :next_delivery_status,
-                delivery_error = :delivery_error,
-                last_sent_at = CASE WHEN :last_sent_at_status = "sent" THEN :last_sent_at ELSE last_sent_at END,
-                updated_at = :updated_at
-            WHERE id = :id
-              AND channel = "mobile"
-              AND delivery_status = "pending"
-              AND verified_at IS NULL
-              AND deleted_at IS NULL');
+        $otp = $this->findActiveById($id);
+        if (
+            !is_array($otp)
+            || (string) ($otp['channel'] ?? '') !== 'mobile'
+            || (string) ($otp['purpose'] ?? '') !== 'login'
+            || (string) ($otp['delivery_status'] ?? '') === 'verified'
+            || (string) ($otp['delivery_status'] ?? '') === 'expired'
+            || !in_array((string) ($otp['delivery_status'] ?? ''), ['pending', 'failed', 'sent'], true)
+        ) {
+            return false;
+        }
 
-        return $statement->execute([
-            'id' => $id,
-            'next_delivery_status' => $status,
-            'last_sent_at_status' => $status,
-            'delivery_error' => $error,
-            'last_sent_at' => date('Y-m-d H:i:s'),
-            'updated_at' => date('Y-m-d H:i:s'),
-        ]) && $statement->rowCount() > 0;
+        $now = date('Y-m-d H:i:s');
+        $payload = [
+            'delivery_status' => $status,
+            'delivery_error' => $status === 'failed' ? $error : null,
+            'updated_at' => $now,
+        ];
+
+        if ($status === 'sent' && array_key_exists('last_sent_at', $otp)) {
+            $payload['last_sent_at'] = $now;
+        }
+
+        return $this->updateById($id, $payload);
     }
 }
