@@ -6,6 +6,9 @@ namespace App\Core;
 
 final class Request
 {
+    private bool $jsonLoaded = false;
+    private array $jsonPayload = [];
+
     public function __construct(
         public readonly string $method,
         public readonly string $path,
@@ -44,8 +47,13 @@ final class Request
     public function all(): array
     {
         if ($this->isJson()) {
-            $decoded = json_decode((string) file_get_contents('php://input'), true);
-            return is_array($decoded) ? $decoded : [];
+            if (!$this->jsonLoaded) {
+                $decoded = json_decode((string) file_get_contents('php://input'), true);
+                $this->jsonPayload = is_array($decoded) ? $decoded : [];
+                $this->jsonLoaded = true;
+            }
+
+            return $this->jsonPayload;
         }
 
         return $this->input;

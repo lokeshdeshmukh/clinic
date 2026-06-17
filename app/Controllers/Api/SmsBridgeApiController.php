@@ -42,6 +42,28 @@ final class SmsBridgeApiController extends Controller
 
         $updated = $this->otps->acknowledgeSms($id, $status, $error);
         if (!$updated) {
+            $existing = $this->otps->findActiveById($id);
+            if (
+                is_array($existing)
+                && (string) ($existing['channel'] ?? '') === 'mobile'
+                && (string) ($existing['purpose'] ?? '') === 'login'
+                && (string) ($existing['delivery_status'] ?? '') === $status
+            ) {
+                if ($error !== null && trim((string) ($existing['delivery_error'] ?? '')) !== $error) {
+                    $this->otps->markDelivery($id, $status, $error);
+                }
+
+                $this->json([
+                    'ok' => true,
+                    'message' => 'SMS status was already recorded.',
+                    'data' => [
+                        'id' => (string) $id,
+                        'status' => $status,
+                        'error' => $error,
+                    ],
+                ]);
+            }
+
             $this->json([
                 'ok' => false,
                 'message' => 'SMS record was not found or is no longer pending.',
@@ -81,6 +103,9 @@ final class SmsBridgeApiController extends Controller
             ? trim(substr($authorization, 7))
             : '';
         $providedToken = trim((string) ($request->server['HTTP_X_SMS_BRIDGE_TOKEN'] ?? ''));
+        if ($providedToken === '') {
+            $providedToken = trim((string) ($request->server['HTTP_X_API_KEY'] ?? ''));
+        }
         if ($providedToken === '') {
             $providedToken = $bearerToken !== '' ? $bearerToken : trim((string) $request->query('token', ''));
         }

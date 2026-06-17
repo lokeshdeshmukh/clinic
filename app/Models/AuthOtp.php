@@ -155,9 +155,9 @@ final class AuthOtp extends Model
         }
 
         $statement = $this->db->prepare('UPDATE auth_otps
-            SET delivery_status = :delivery_status,
+            SET delivery_status = :next_delivery_status,
                 delivery_error = :delivery_error,
-                last_sent_at = CASE WHEN :delivery_status = "sent" THEN :last_sent_at ELSE last_sent_at END,
+                last_sent_at = CASE WHEN :last_sent_at_status = "sent" THEN :last_sent_at ELSE last_sent_at END,
                 updated_at = :updated_at
             WHERE id = :id
               AND channel = "mobile"
@@ -167,7 +167,8 @@ final class AuthOtp extends Model
 
         return $statement->execute([
             'id' => $id,
-            'delivery_status' => $status,
+            'next_delivery_status' => $status,
+            'last_sent_at_status' => $status,
             'delivery_error' => $error,
             'last_sent_at' => date('Y-m-d H:i:s'),
             'updated_at' => date('Y-m-d H:i:s'),

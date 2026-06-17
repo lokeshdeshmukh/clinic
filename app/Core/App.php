@@ -16,11 +16,25 @@ final class App
         $router = new Router();
         require base_path('routes/web.php');
         require base_path('routes/api.php');
+        $request = Request::capture();
 
         try {
-            $router->dispatch(Request::capture());
+            $router->dispatch($request);
         } catch (Throwable $exception) {
             $this->report($exception);
+
+            if ($this->expectsJson($request)) {
+                $payload = [
+                    'ok' => false,
+                    'message' => 'Something went wrong. Please try again.',
+                ];
+
+                if (config('app.debug', false)) {
+                    $payload['message'] = $exception->getMessage();
+                }
+
+                Response::json($payload, 500);
+            }
 
             if (config('app.debug', false)) {
                 Response::abort(500, nl2br(e($exception->getMessage() . "\n" . $exception->getTraceAsString())));
@@ -46,6 +60,11 @@ final class App
                 throw $exception;
             }
         }
+    }
+
+    private function expectsJson(Request $request): bool
+    {
+        return $request->isJson() || str_starts_with($request->path, '/api/');
     }
 
     private function report(Throwable $exception): void
