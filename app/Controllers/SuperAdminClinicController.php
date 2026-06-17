@@ -38,6 +38,11 @@ final class SuperAdminClinicController extends Controller
             'smsBridgeBatchLimit' => (int) config('services.sms.bridge_batch_limit', 25),
             'smsPendingUrl' => rtrim((string) config('app.url'), '/') . '/api/pending-sms?token=' . urlencode($smsBridgeToken),
             'smsStatusUrl' => rtrim((string) config('app.url'), '/') . '/api/sms-status',
+            'prescriptionOcrEnabled' => (bool) config('services.prescription_ocr.enabled', false),
+            'prescriptionOcrEndpoint' => (string) config('services.prescription_ocr.endpoint', ''),
+            'prescriptionOcrApiKey' => (string) config('services.prescription_ocr.api_key', ''),
+            'prescriptionOcrLanguage' => (string) config('services.prescription_ocr.language', 'eng'),
+            'prescriptionOcrEngine' => (string) config('services.prescription_ocr.engine', '2'),
         ]);
     }
 
@@ -79,6 +84,11 @@ final class SuperAdminClinicController extends Controller
 
         $smsBridgeEnabled = (string) $request->input('sms_bridge_enabled', (string) ((bool) config('services.sms.bridge_enabled', false) ? '1' : '0'));
         $smsBridgeBatchLimit = max(1, (int) $request->input('sms_bridge_batch_limit', (int) config('services.sms.bridge_batch_limit', 25)));
+        $prescriptionOcrEnabled = (string) $request->input('prescription_ocr_enabled', (string) ((bool) config('services.prescription_ocr.enabled', false) ? '1' : '0'));
+        $prescriptionOcrApiKey = trim((string) $request->input('prescription_ocr_api_key', (string) config('services.prescription_ocr.api_key', '')));
+        $prescriptionOcrEndpoint = trim((string) $request->input('prescription_ocr_endpoint', (string) config('services.prescription_ocr.endpoint', 'https://api.ocr.space/parse/image')));
+        $prescriptionOcrLanguage = trim((string) $request->input('prescription_ocr_language', (string) config('services.prescription_ocr.language', 'eng')));
+        $prescriptionOcrEngine = trim((string) $request->input('prescription_ocr_engine', (string) config('services.prescription_ocr.engine', '2')));
 
         try {
             $this->env->set([
@@ -86,6 +96,11 @@ final class SuperAdminClinicController extends Controller
                 'SMS_BRIDGE_ENABLED' => in_array($smsBridgeEnabled, ['1', 'true', 'on', 'yes'], true) ? 'true' : 'false',
                 'SMS_BRIDGE_TOKEN' => $smsBridgeToken,
                 'SMS_BRIDGE_BATCH_LIMIT' => (string) $smsBridgeBatchLimit,
+                'PRESCRIPTION_OCR_ENABLED' => in_array($prescriptionOcrEnabled, ['1', 'true', 'on', 'yes'], true) ? 'true' : 'false',
+                'PRESCRIPTION_OCR_API_KEY' => $prescriptionOcrApiKey,
+                'PRESCRIPTION_OCR_ENDPOINT' => $prescriptionOcrEndpoint,
+                'PRESCRIPTION_OCR_LANGUAGE' => $prescriptionOcrLanguage !== '' ? $prescriptionOcrLanguage : 'eng',
+                'PRESCRIPTION_OCR_ENGINE' => $prescriptionOcrEngine !== '' ? $prescriptionOcrEngine : '2',
             ]);
         } catch (\Throwable $exception) {
             $this->redirect('/super-admin/dashboard', $exception->getMessage(), 'error');

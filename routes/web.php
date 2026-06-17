@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Controllers\AdminAppointmentController;
 use App\Controllers\AvailabilityController;
+use App\Controllers\AdminPatientController;
 use App\Controllers\BookingController;
 use App\Controllers\ClinicAuthController;
 use App\Controllers\ClinicDashboardController;
@@ -72,6 +73,10 @@ $router->get('/admin/appointments', [AdminAppointmentController::class, 'index']
 $router->post('/admin/appointments/{id}/cancel', [AdminAppointmentController::class, 'cancel'], ['auth:clinic', 'csrf']);
 $router->post('/admin/appointments/{id}/reschedule', [AdminAppointmentController::class, 'reschedule'], ['auth:clinic', 'csrf']);
 $router->post('/admin/appointments/{id}/complete', [AdminAppointmentController::class, 'complete'], ['auth:clinic', 'csrf']);
+$router->get('/admin/patients', [AdminPatientController::class, 'index'], ['auth:clinic']);
+$router->get('/admin/patients/{id}', [AdminPatientController::class, 'show'], ['auth:clinic']);
+$router->post('/admin/patients/{id}/records', [AdminPatientController::class, 'storeRecord'], ['auth:clinic', 'csrf']);
+$router->get('/admin/patient-records/{id}/download', [AdminPatientController::class, 'downloadRecord'], ['auth:clinic']);
 
 $router->get('/admin/reports', [ReportsController::class, 'index'], ['auth:clinic']);
 $router->get('/admin/reports/export', [ReportsController::class, 'export'], ['auth:clinic']);

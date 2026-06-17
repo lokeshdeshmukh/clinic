@@ -45,7 +45,12 @@
                             </form>
                         </div>
                     <?php else: ?>
-                        <div class="rounded-3xl bg-slate-50 p-4 text-sm text-slate-500">This appointment is already <?= e($appointment['status']) ?>.</div>
+                        <div class="grid gap-3 rounded-3xl bg-slate-50 p-4 text-sm text-slate-500">
+                            <p>This appointment is already <?= e($appointment['status']) ?>.</p>
+                            <?php if ($appointment['status'] === 'completed'): ?>
+                                <a href="<?= e(url('/admin/patients/' . $appointment['patient_id'] . '?appointment=' . $appointment['id'])) ?>" class="btn-secondary">Add visit record</a>
+                            <?php endif; ?>
+                        </div>
                     <?php endif; ?>
                 </div>
             </div>

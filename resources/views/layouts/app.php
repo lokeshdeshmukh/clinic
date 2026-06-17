@@ -86,6 +86,9 @@ if (str_starts_with($requestPath, '/admin/settings')) {
 } elseif (str_starts_with($requestPath, '/admin/reports')) {
     $adminActionHref = '/admin/dashboard';
     $adminActionLabel = 'Dashboard';
+} elseif (str_starts_with($requestPath, '/admin/patients')) {
+    $adminActionHref = '/admin/appointments';
+    $adminActionLabel = 'Appointments';
 }
 $adminNavItems = [
     [
@@ -102,6 +105,11 @@ $adminNavItems = [
         'label' => 'Appointments',
         'href' => '/admin/appointments',
         'active' => str_starts_with($requestPath, '/admin/appointments'),
+    ],
+    [
+        'label' => 'Patients',
+        'href' => '/admin/patients',
+        'active' => str_starts_with($requestPath, '/admin/patients') || str_starts_with($requestPath, '/admin/patient-records'),
     ],
     [
         'label' => 'Clinic timings',

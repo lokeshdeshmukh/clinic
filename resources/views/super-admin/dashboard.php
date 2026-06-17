@@ -8,8 +8,8 @@
     <div class="grid gap-6 xl:grid-cols-[0.88fr_1.12fr]">
         <div class="panel">
             <p class="text-sm uppercase tracking-[0.22em] text-slate-500">Deployment control</p>
-            <h2 class="mt-2 text-2xl font-semibold">Deploy and SMS bridge settings</h2>
-            <p class="mt-3 text-sm text-slate-500">Keep deployment access and mobile OTP delivery settings at platform level. Your Android app can poll pending OTP SMS requests from here.</p>
+            <h2 class="mt-2 text-2xl font-semibold">Deploy, SMS bridge, and OCR settings</h2>
+            <p class="mt-3 text-sm text-slate-500">Keep deployment access, mobile OTP delivery, and prescription OCR settings at platform level. Local Tesseract OCR is used automatically when the hosting server supports it; otherwise you can wire a hosted OCR API from here.</p>
             <form method="post" action="<?= e(url('/super-admin/deploy-token')) ?>" class="mt-6 grid gap-4">
                 <?= csrf_field() ?>
                 <div>
@@ -44,6 +44,37 @@
                 <div>
                     <label for="sms_status_url">SMS status API</label>
                     <input id="sms_status_url" value="<?= e($smsStatusUrl) ?>" readonly>
+                </div>
+                <div class="rounded-3xl border border-slate-200 bg-slate-50 p-4">
+                    <p class="text-sm font-semibold text-slate-800">Prescription OCR</p>
+                    <p class="mt-1 text-sm text-slate-500">Use this if you want prescription photos to auto-fill suggested medications on clinic patient records even when the server does not have Tesseract installed.</p>
+                    <div class="mt-4 grid gap-4 md:grid-cols-2">
+                        <div>
+                            <label for="prescription_ocr_enabled">Hosted OCR API</label>
+                            <select id="prescription_ocr_enabled" name="prescription_ocr_enabled">
+                                <option value="0" <?= !$prescriptionOcrEnabled ? 'selected' : '' ?>>Disabled</option>
+                                <option value="1" <?= $prescriptionOcrEnabled ? 'selected' : '' ?>>Enabled</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="prescription_ocr_language">OCR language</label>
+                            <input id="prescription_ocr_language" name="prescription_ocr_language" value="<?= e($prescriptionOcrLanguage) ?>" placeholder="eng">
+                        </div>
+                    </div>
+                    <div class="mt-4">
+                        <label for="prescription_ocr_api_key">OCR API key</label>
+                        <input id="prescription_ocr_api_key" name="prescription_ocr_api_key" value="<?= e($prescriptionOcrApiKey) ?>" placeholder="Set your OCR API key">
+                    </div>
+                    <div class="mt-4 grid gap-4 md:grid-cols-2">
+                        <div>
+                            <label for="prescription_ocr_endpoint">OCR endpoint</label>
+                            <input id="prescription_ocr_endpoint" name="prescription_ocr_endpoint" value="<?= e($prescriptionOcrEndpoint) ?>" placeholder="https://api.ocr.space/parse/image">
+                        </div>
+                        <div>
+                            <label for="prescription_ocr_engine">OCR engine</label>
+                            <input id="prescription_ocr_engine" name="prescription_ocr_engine" value="<?= e($prescriptionOcrEngine) ?>" placeholder="2">
+                        </div>
+                    </div>
                 </div>
                 <button class="btn-primary" type="submit">Save platform settings</button>
             </form>

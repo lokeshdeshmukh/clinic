@@ -15,6 +15,7 @@ $revenueValues = array_map(static fn (array $row): float => (float) $row['total'
     <div class="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <a href="<?= e(url('/admin/doctors/create')) ?>" class="btn-primary">Add doctor</a>
         <a href="<?= e(url('/admin/appointments')) ?>" class="btn-secondary">Manage appointments</a>
+        <a href="<?= e(url('/admin/patients')) ?>" class="btn-secondary">Patient records</a>
         <a href="<?= e(url('/admin/settings')) ?>" class="btn-secondary">Clinic timings</a>
         <a href="<?= e(url('/admin/availability')) ?>" class="btn-secondary">Doctor schedule</a>
     </div>

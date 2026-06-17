@@ -13,3 +13,4 @@ SOURCE database/migrations/012_alter_patients_for_passwordless_auth.sql;
 SOURCE database/migrations/013_create_auth_otps.sql;
 SOURCE database/migrations/014_create_patient_identities.sql;
 SOURCE database/migrations/015_add_super_admin_username_and_seed_default_admin.sql;
+SOURCE database/migrations/016_create_patient_records.sql;

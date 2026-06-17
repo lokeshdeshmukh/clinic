@@ -20,4 +20,11 @@ return [
         'bridge_token' => env('SMS_BRIDGE_TOKEN', ''),
         'bridge_batch_limit' => max(1, (int) env('SMS_BRIDGE_BATCH_LIMIT', 25)),
     ],
+    'prescription_ocr' => [
+        'enabled' => filter_var(env('PRESCRIPTION_OCR_ENABLED', false), FILTER_VALIDATE_BOOL),
+        'endpoint' => env('PRESCRIPTION_OCR_ENDPOINT', 'https://api.ocr.space/parse/image'),
+        'api_key' => env('PRESCRIPTION_OCR_API_KEY', ''),
+        'language' => env('PRESCRIPTION_OCR_LANGUAGE', 'eng'),
+        'engine' => env('PRESCRIPTION_OCR_ENGINE', '2'),
+    ],
 ];
